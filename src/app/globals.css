@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-fraunces: "Fraunces", serif;
+  --font-manrope: "Manrope", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+@layer base {
+  * {
+    @apply border-stone-200 dark:border-stone-800;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-stone-50 text-stone-800 dark:bg-conservatory-950 dark:text-stone-200 font-body antialiased;
+    font-feature-settings: "ss01" on, "ss02" on;
+  }
+
+  /* Visible keyboard focus everywhere — accessibility floor, not decoration */
+  :focus-visible {
+    outline: 2px solid theme("colors.bronze.400");
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  ::selection {
+    background: theme("colors.bronze.300");
+    color: theme("colors.ink");
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* The signature motif: a thin topographic/leaf contour rule used as a
+     section divider throughout the site instead of a generic HR. */
+  .contour-rule {
+    @apply relative h-px w-full bg-gradient-to-r from-transparent via-bronze-400/60 to-transparent;
+  }
+
+  .eyebrow {
+    @apply text-xs font-mono uppercase tracking-widest2 text-bronze-500 dark:text-bronze-300;
+  }
+
+  .glass-panel {
+    @apply bg-white/70 dark:bg-conservatory-900/50 backdrop-blur-xl border border-white/40 dark:border-stone-700/40 shadow-glass;
+  }
+
+  .container-hotel {
+    @apply mx-auto w-full max-w-[1440px] px-6 md:px-10 lg:px-16;
+  }
+
+  .btn-shimmer {
+    background: linear-gradient(110deg, theme("colors.bronze.400") 0%, theme("colors.bronze.200") 40%, theme("colors.bronze.400") 60%);
+    background-size: 200% 100%;
+  }
+  .btn-shimmer:hover {
+    animation: shimmer 2.5s linear infinite;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

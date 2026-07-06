@@ -1,0 +1,62 @@
+// Prisma schema for SOLTERRA, using MySQL.
+//
+// Point DATABASE_URL at any MySQL 8+ instance — local (via Docker or a
+// native install), or a managed provider (PlanetScale, Railway, AWS RDS,
+// etc). See README.md for local setup and `.env.example` for the
+// connection string format.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  RESPONDED
+}
+
+enum ReservationStatus {
+  HELD
+  CONFIRMED
+  CANCELLED
+}
+
+model ContactSubmission {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String        @db.Text
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Reservation {
+  id                String             @id @default(cuid())
+  confirmationCode  String             @unique
+  roomSlug          String
+  roomName          String
+  checkIn           String
+  checkOut          String
+  guests            Int
+  promoCode         String?
+  totalPriceUsd     Int
+  guestName         String
+  guestEmail        String
+  guestPhone        String?
+  specialRequests   String?            @db.Text
+  status            ReservationStatus  @default(HELD)
+  createdAt         DateTime           @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([guestEmail])
+}
