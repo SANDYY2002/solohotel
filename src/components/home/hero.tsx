@@ -17,7 +17,7 @@ export function Hero() {
   }
 
   return (
-    <section className="relative flex min-h-[100vh] w-full flex-col justify-end overflow-hidden">
+    <section className="relative flex min-h-[100vh] w-full flex-col justify-end">
       <Image
         src={home.heroImage}
         alt={`Solterra Cliff House at golden hour, overlooking ${siteConfig.location}`}
