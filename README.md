@@ -38,9 +38,7 @@ npm run lint    # ESLint
 
 ```
 prisma/
-  schema.prisma          Database schema (ContactSubmission, Reservation)
-content-data/
-  site-content.json       All editable site content (auto-created on first run)
+  schema.prisma          Database schema (ContactSubmission, Reservation, SiteContent)
 src/
   middleware.ts           Protects /admin/* behind the session cookie
   app/
@@ -63,6 +61,7 @@ src/
       admin/contacts/[id]/route.ts      PATCH — update message status
       admin/reservations/[id]/route.ts  PATCH — update reservation status
       admin/content/route.ts            GET/PUT — read & save any site content section
+      admin/upload/route.ts             POST — upload an image file to Vercel Blob
     admin/
       login/page.tsx                Staff login
       (dashboard)/layout.tsx        Sidebar shell (not applied to /login)
@@ -81,11 +80,13 @@ src/
     gallery/      masonry grid + lightbox
     contact/      contact form
     admin/        logout button, status dropdown, array-editor, string-list-editor, save-bar,
+                  image-upload.tsx (device upload + URL paste, single & multi-image),
                   content/  (one editor component per section, paired with the pages above)
     shared/       theme provider/toggle, reveal animation, contour motif, animated counter,
                   newsletter form, live chat placeholder, map, page header, phone-link (call/WhatsApp)
   lib/
-    content-store.ts        Reads/writes content-data/site-content.json (the CMS backend)
+    content-store.ts        Reads/writes the SiteContent table (the CMS backend)
+    content-defaults.ts     Seed content used the first time the table is empty
     content-types.ts        TypeScript types for every editable field
     site-content-context.tsx  React context so client components can read live content
     icon-map.ts              Name → lucide-react icon lookup (for admin icon pickers)
@@ -138,7 +139,7 @@ npx prisma generate
 npx prisma db push
 ```
 
-This creates the `ContactSubmission` and `Reservation` tables in your MySQL database. Re-run `db push` any time you edit `prisma/schema.prisma`. For a production project with a migration history (recommended once you have real data), use `npx prisma migrate dev` instead of `db push` from the start.
+This creates the `ContactSubmission`, `Reservation`, and `SiteContent` tables in your MySQL database. Re-run `db push` any time you edit `prisma/schema.prisma`. For a production project with a migration history (recommended once you have real data), use `npx prisma migrate dev` instead of `db push` from the start.
 
 > **Sandbox note:** in the environment this project was authored in, `prisma generate` could not run because outbound access to `binaries.prisma.sh` (where Prisma downloads its query engine binary) and to a MySQL server weren't reachable — TypeScript and ESLint were verified clean everywhere except the two admin table files, which show a "no exported member" error for the Prisma model types until the client is generated. This is expected in *any* environment before the first `prisma generate` — it is not a code defect, and resolves itself as soon as `npm install` runs somewhere with normal internet + database access (its `postinstall` script runs `prisma generate` automatically).
 
@@ -175,11 +176,26 @@ Every piece of marketing copy on the site — not just contact messages and rese
 
 ### How it works
 
-- Content lives in a single JSON file, `content-data/site-content.json`, created automatically (seeded with the current demo content) the first time the app reads it. There's no database migration to run — this is deliberately simpler than the Reservation/ContactSubmission tables, since it's just structured text and image URLs, not relational data.
+- Content lives in one row of a `SiteContent` table in your MySQL database (see `prisma/schema.prisma`), stored as a single JSON blob and seeded from `src/lib/content-defaults.ts` the first time it's read. It's a database table rather than a file on disk specifically so this works on serverless hosts like Vercel — a JSON file written with `fs` would silently fail to persist there, since the filesystem is read-only at runtime.
+- After pulling this change, run `npx prisma db push` (or `npx prisma migrate dev`) once to add the `SiteContent` table to your database.
 - Every public page reads through `src/lib/content-store.ts` (server components) or the `useSiteContent()` hook (`src/lib/site-content-context.tsx`, for client components like the booking widget, navbar, and hero) — so a save in the admin dashboard is reflected on the live site immediately, without a rebuild.
 - Each admin section is its own page under `/admin/content/*`, guarded by the same session-cookie middleware as the rest of `/admin`. Saving calls `PUT /api/admin/content` with `{ section, data }`, which is also auth-checked server-side.
 - Icons (for amenities and sustainability items) are stored as a name (e.g. `"Waves"`) and resolved to a `lucide-react` component via `src/lib/icon-map.ts` — add more icons to that map if you want more options in the picker.
-- If you later want multi-editor conflict handling, revision history, or to move this into MySQL alongside the other tables, `content-store.ts` is the only file that needs to change — every page and component just calls `getSiteContent()` / `useSiteContent()`.
+
+### Uploading images from the admin dashboard
+
+Every image field (room photos, gallery photos, staff photos, the hero image, venue and chef photos) has two ways to set an image: paste a URL directly, or click **"Upload from device"** / **"Upload photos"** to pick a file.
+
+Uploads go through `POST /api/admin/upload` to **Vercel Blob**, which returns a permanent public URL that gets saved into the content the same way a pasted URL would. This (rather than saving to the local filesystem) is what makes uploads work on Vercel's serverless runtime, where files written to disk don't persist between requests or deployments.
+
+To enable it:
+1. In your Vercel project, go to **Storage → Create Database → Blob**, and create a store.
+2. Vercel automatically adds a `BLOB_READ_WRITE_TOKEN` environment variable to your project — no extra setup needed in production.
+3. For local development, copy that token into your `.env` file (see `.env.example`), or run `vercel env pull`.
+
+Without a token configured, the upload button returns a clear error explaining it isn't set up yet — pasting a URL still works either way, so the CMS is usable even before you connect Blob storage.
+
+
 
 ### Call or WhatsApp on every phone number
 
@@ -187,7 +203,7 @@ Every phone number on the site (footer, contact page, the map card) now uses `sr
 
 ## Content & imagery
 
-All copy, pricing, staff, and awards are placeholder content for a fictional property, editable via `/admin/content` (see above) or directly in `content-data/site-content.json`. Imagery is served from Unsplash for this demo — replace `next.config.mjs`'s `images.remotePatterns` and the image URLs (via the admin dashboard, or directly in the JSON file) with your DAM/CDN before launch.
+All copy, pricing, staff, and awards are placeholder content for a fictional property, editable via `/admin/content` (see above). Imagery is served from Unsplash for this demo and can be replaced with your own photos directly in the admin dashboard (paste a URL or upload from your device).
 
 ## Accessibility & performance
 

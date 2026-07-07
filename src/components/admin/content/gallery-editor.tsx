@@ -27,7 +27,7 @@ export function GalleryEditor({ initial }: { initial: GalleryImage[] }) {
           addLabel="Add photo"
           emptyItem={{ src: "", category: "Rooms", alt: "", w: 4, h: 3 }}
           fields={[
-            { key: "src", label: "Image URL", type: "text" },
+            { key: "src", label: "Photo", type: "image" },
             { key: "category", label: "Category", type: "select", options: CATEGORIES },
             { key: "alt", label: "Alt text", type: "text", helpText: "Describes the photo for accessibility & SEO" },
             { key: "w", label: "Aspect width", type: "number" },

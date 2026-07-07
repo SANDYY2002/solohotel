@@ -5,11 +5,12 @@ import { Plus, Trash2, ChevronDown, ChevronUp, GripVertical } from "lucide-react
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ICON_NAMES } from "@/lib/icon-map";
+import { ImageUploadField, MultiImageUploadField } from "@/components/admin/image-upload";
 
 export type FieldDef = {
   key: string;
   label: string;
-  type: "text" | "textarea" | "number" | "boolean" | "tags" | "icon" | "select";
+  type: "text" | "textarea" | "number" | "boolean" | "tags" | "icon" | "select" | "image" | "images";
   placeholder?: string;
   helpText?: string;
   options?: string[];
@@ -117,7 +118,7 @@ export function ArrayEditor({
             {isOpen && (
               <div className="grid gap-4 border-t border-stone-200 p-4 dark:border-stone-800 sm:grid-cols-2">
                 {fields.map((field) => (
-                  <div key={field.key} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
+                  <div key={field.key} className={field.type === "textarea" || field.type === "image" || field.type === "images" ? "sm:col-span-2" : ""}>
                     <Label htmlFor={`${index}-${field.key}`}>{field.label}</Label>
                     <FieldInput
                       id={`${index}-${field.key}`}
@@ -203,6 +204,14 @@ function FieldInput({
           )
         }
       />
+    );
+  }
+  if (field.type === "image") {
+    return <ImageUploadField id={id} value={typeof value === "string" ? value : ""} onChange={onChange} />;
+  }
+  if (field.type === "images") {
+    return (
+      <MultiImageUploadField value={Array.isArray(value) ? (value as string[]) : []} onChange={onChange} />
     );
   }
   if (field.type === "select") {

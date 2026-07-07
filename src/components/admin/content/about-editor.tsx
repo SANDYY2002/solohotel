@@ -66,7 +66,7 @@ export function AboutEditor({ initial }: { initial: AboutContent }) {
             fields={[
               { key: "name", label: "Name", type: "text" },
               { key: "role", label: "Role", type: "text" },
-              { key: "image", label: "Image URL", type: "text" },
+              { key: "image", label: "Photo", type: "image" },
             ]}
           />
         </section>

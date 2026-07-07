@@ -60,3 +60,13 @@ model Reservation {
   @@index([createdAt])
   @@index([guestEmail])
 }
+
+// Single-row store for every admin-editable piece of site copy (settings,
+// rooms, dining, spa, gallery, testimonials, FAQs, about). Kept as one JSON
+// blob rather than fully normalized tables since it's just structured text
+// and image URLs, not relational data — see src/lib/content-store.ts.
+model SiteContent {
+  key       String   @id @default("site-content")
+  data      Json
+  updatedAt DateTime @updatedAt
+}

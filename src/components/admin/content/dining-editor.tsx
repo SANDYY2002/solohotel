@@ -2,6 +2,7 @@
 
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { ArrayEditor } from "@/components/admin/array-editor";
+import { ImageUploadField } from "@/components/admin/image-upload";
 import { SaveBar, useSaveSection } from "@/components/admin/save-bar";
 import type { DiningContent } from "@/lib/content-types";
 
@@ -31,7 +32,7 @@ export function DiningEditor({ initial }: { initial: DiningContent }) {
               { key: "name", label: "Name", type: "text" },
               { key: "tagline", label: "Tagline", type: "text" },
               { key: "hours", label: "Hours", type: "text" },
-              { key: "image", label: "Image URL", type: "text" },
+              { key: "image", label: "Photo", type: "image" },
               { key: "description", label: "Description", type: "textarea" },
             ]}
           />
@@ -93,11 +94,11 @@ export function DiningEditor({ initial }: { initial: DiningContent }) {
               />
             </div>
             <div className="sm:col-span-2">
-              <Label htmlFor="chefImage">Image URL</Label>
-              <Input
+              <Label htmlFor="chefImage">Photo</Label>
+              <ImageUploadField
                 id="chefImage"
                 value={data.chef.image}
-                onChange={(e) => setData({ ...data, chef: { ...data.chef, image: e.target.value } })}
+                onChange={(url) => setData({ ...data, chef: { ...data.chef, image: url } })}
               />
             </div>
             <div className="sm:col-span-2">

@@ -1,7 +1,8 @@
 "use client";
 
-import { Input, Label } from "@/components/ui/input";
+import { Label } from "@/components/ui/input";
 import { ArrayEditor } from "@/components/admin/array-editor";
+import { ImageUploadField } from "@/components/admin/image-upload";
 import { SaveBar, useSaveSection } from "@/components/admin/save-bar";
 import type { HomeContent } from "@/lib/content-types";
 
@@ -20,11 +21,11 @@ export function HomeEditor({ initial }: { initial: HomeContent }) {
 
       <div className="max-w-2xl space-y-8">
         <section>
-          <Label htmlFor="heroImage">Hero image URL</Label>
-          <Input
+          <Label htmlFor="heroImage">Hero image</Label>
+          <ImageUploadField
             id="heroImage"
             value={data.heroImage}
-            onChange={(e) => setData({ ...data, heroImage: e.target.value })}
+            onChange={(url) => setData({ ...data, heroImage: url })}
           />
         </section>
 

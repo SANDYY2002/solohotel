@@ -6,6 +6,7 @@ const nextConfig = {
     // Swap for the hotel's DAM/CDN domain in production.
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
     formats: ["image/avif", "image/webp"],
   },

@@ -51,7 +51,7 @@ export function RoomsEditor({ initial }: { initial: Room[] }) {
             { key: "unitsLeft", label: "Units left", type: "number" },
             { key: "description", label: "Description", type: "textarea" },
             { key: "features", label: "Features", type: "tags", helpText: "Comma-separated" },
-            { key: "images", label: "Image URLs", type: "tags", helpText: "Comma-separated, first is used as the cover photo" },
+            { key: "images", label: "Photos", type: "images", helpText: "First photo is used as the cover image" },
           ]}
         />
       </div>
