@@ -182,6 +182,7 @@ Every piece of marketing copy on the site — not just contact messages and rese
 - After pulling this change, run `npx prisma db push` (or `npx prisma migrate dev`) once to add the `SiteContent` table to your database.
 - Every public page reads through `src/lib/content-store.ts` (server components) or the `useSiteContent()` hook (`src/lib/site-content-context.tsx`, for client components like the booking widget, navbar, and hero) — so a save in the admin dashboard is reflected on the live site immediately, without a rebuild.
 - Each admin section is its own page under `/admin/content/*`, guarded by the same session-cookie middleware as the rest of `/admin`. Saving calls `PUT /api/admin/content` with `{ section, data }`, which is also auth-checked server-side.
+- Every page that reads site content — the marketing pages and the admin editors alike — is explicitly marked `export const dynamic = "force-dynamic"`, so it always renders fresh from the database per request instead of being pre-rendered once as static HTML at build time. Without this, Next.js would cache the first render and admin edits would never show up on the live site (and would look like they "reset" after a restart, since a restart doesn't trigger a rebuild).
 - Icons (for amenities and sustainability items) are stored as a name (e.g. `"Waves"`) and resolved to a `lucide-react` component via `src/lib/icon-map.ts` — add more icons to that map if you want more options in the picker.
 
 ### Uploading images from the admin dashboard
