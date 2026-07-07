@@ -113,8 +113,10 @@ Both the contact form and the booking widget write to a real **MySQL** database,
 Any MySQL 8+ instance works. Easiest local option, via Docker:
 
 ```bash
-docker run --name solterra-mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=solterra -p 3306:3306 -d mysql:8
+docker run --name solterra-mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=solterra -p 3306:3306 -v solterra-mysql-data:/var/lib/mysql -d mysql:8
 ```
+
+> **Note:** the `-v solterra-mysql-data:/var/lib/mysql` flag stores the database in a named Docker volume, not inside the container itself. Without it, removing and recreating the container (e.g. `docker rm` + `docker run` again) wipes everything — reservations, contact messages, and all site content edited in `/admin/content`. Stopping/starting the same container (`docker stop` / `docker start`) is safe either way; it's only removal + recreation that loses data.
 
 Or use a managed instance for zero local setup — PlanetScale, Railway, and AWS RDS all work with the same `DATABASE_URL` approach.
 
