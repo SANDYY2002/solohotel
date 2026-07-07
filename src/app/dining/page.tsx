@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { getSiteContent } from "@/lib/content-store";
 import { formatUSD } from "@/lib/utils";
 
+// Reads live content from the database on every request — without this,
+// Next.js would statically prerender this page at build time and never
+// pick up admin edits made afterward.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Dining",
   description: "Il Vetro, La Terrazza, and The Grotto Bar — three dining venues at Solterra Cliff House, led by Executive Chef Elena Moretti.",

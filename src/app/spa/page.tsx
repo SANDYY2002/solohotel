@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { getSiteContent } from "@/lib/content-store";
 import { formatUSD } from "@/lib/utils";
 
+// Reads live content from the database on every request — without this,
+// Next.js would statically prerender this page at build time and never
+// pick up admin edits made afterward.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Spa & Wellness",
   description: "A basalt thermal circuit carved into the cliff, treatments drawn from the hillside and the sea, and a salt-water infinity pool.",

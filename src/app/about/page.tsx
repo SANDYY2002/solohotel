@@ -6,6 +6,11 @@ import { ContourMotif } from "@/components/shared/contour-motif";
 import { getSiteContent } from "@/lib/content-store";
 import { resolveIcon } from "@/lib/icon-map";
 
+// Reads live content from the database on every request — without this,
+// Next.js would statically prerender this page at build time and never
+// pick up admin edits made afterward.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "About",
   description: "The story of Solterra Cliff House — a family property carved into the Amalfi coastline, its people, its awards, and its approach to sustainability.",

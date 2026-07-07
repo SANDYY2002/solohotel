@@ -8,6 +8,14 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { LiveChat } from "@/components/shared/live-chat";
 
+// Every page reads live content from the database via getSiteContent().
+// Without this, Next.js would try to pre-render pages as static HTML at
+// build time and keep serving that frozen snapshot afterward — so admin
+// edits would never show up (and would look like they "reset" on restart,
+// since a restart doesn't trigger a rebuild). Setting this on the root
+// layout forces every route in the app to render fresh on each request.
+export const dynamic = "force-dynamic";
+
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",

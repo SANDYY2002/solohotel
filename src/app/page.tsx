@@ -11,6 +11,11 @@ import { LocationMap } from "@/components/shared/location-map";
 import { Reveal } from "@/components/shared/reveal";
 import { getSiteContent } from "@/lib/content-store";
 
+// Reads live content from the database on every request — without this,
+// Next.js would statically prerender this page at build time and never
+// pick up admin edits made afterward.
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const { siteConfig } = await getSiteContent();
   return { title: `${siteConfig.name} — ${siteConfig.tagline}` };

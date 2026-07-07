@@ -3,6 +3,9 @@ import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate } from "lucide-rea
 import { getSiteContent } from "@/lib/content-store";
 import { AdminLogoutButton } from "@/components/admin/logout-button";
 
+// Always read the latest content from the database on every request.
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { siteConfig } = await getSiteContent();
   return (

@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/page-header";
 import { MasonryGallery } from "@/components/gallery/masonry-gallery";
 
+// Reads live content from the database on every request — without this,
+// Next.js would statically prerender this page at build time and never
+// pick up admin edits made afterward.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Gallery",
   description: "Rooms, dining, spa, grounds, and coastline — a visual tour of Solterra Cliff House.",

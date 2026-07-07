@@ -7,6 +7,11 @@ import { ContactForm } from "@/components/contact/contact-form";
 import { PhoneLink } from "@/components/shared/phone-link";
 import { getSiteContent } from "@/lib/content-store";
 
+// Reads live content from the database on every request — without this,
+// Next.js would statically prerender this page at build time and never
+// pick up admin edits made afterward.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Contact",
   description: "Reach the Solterra Cliff House concierge team by phone, email, or message — or find us on the Path of the Gods.",
