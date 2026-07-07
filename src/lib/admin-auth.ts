@@ -70,3 +70,10 @@ export function checkAdminPassword(candidate: string): boolean {
   }
   return candidate === expected;
 }
+
+/** Checks the session cookie on an incoming API request. Use at the top of any `/api/admin/*` route. */
+export async function requireAdmin(req: Request): Promise<boolean> {
+  const cookie = req.headers.get("cookie") ?? "";
+  const match = cookie.match(new RegExp(`${SESSION_COOKIE}=([^;]+)`));
+  return verifySessionToken(match?.[1]);
+}

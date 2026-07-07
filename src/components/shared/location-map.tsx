@@ -1,7 +1,9 @@
-import { MapPin, Phone, Mail } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
+import { MapPin, Mail } from "lucide-react";
+import { getSiteContent } from "@/lib/content-store";
+import { PhoneLink } from "@/components/shared/phone-link";
 
-export function LocationMap({ minimal = false }: { minimal?: boolean }) {
+export async function LocationMap({ minimal = false }: { minimal?: boolean }) {
+  const { siteConfig } = await getSiteContent();
   const { lat, lng } = siteConfig.coordinates;
   const bbox = `${lng - 0.02},${lat - 0.012},${lng + 0.02},${lat + 0.012}`;
   const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
@@ -22,8 +24,8 @@ export function LocationMap({ minimal = false }: { minimal?: boolean }) {
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-bronze-400" /> {siteConfig.location}
             </li>
-            <li className="flex items-center gap-2">
-              <Phone className="h-4 w-4 flex-shrink-0 text-bronze-400" /> {siteConfig.phone}
+            <li>
+              <PhoneLink phone={siteConfig.phone} whatsapp={siteConfig.whatsapp} iconClassName="text-bronze-400" />
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4 flex-shrink-0 text-bronze-400" /> {siteConfig.email}

@@ -3,15 +3,11 @@
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
+import { useSiteContent } from "@/lib/site-content-context";
 import { BookingWidget } from "@/components/booking/booking-widget";
 
-// TODO: if you add a `heroImage` field to siteConfig, swap this for that —
-// keeping it local for now so this file compiles without touching site-config.ts.
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?q=80&w=2400&auto=format&fit=crop";
-
 export function Hero() {
+  const { siteConfig, home } = useSiteContent();
   const reduceMotion = useReducedMotion();
 
   function scrollToContent() {
@@ -23,7 +19,7 @@ export function Hero() {
   return (
     <section className="relative flex min-h-[100vh] w-full flex-col justify-end overflow-hidden">
       <Image
-        src={HERO_IMAGE}
+        src={home.heroImage}
         alt={`Solterra Cliff House at golden hour, overlooking ${siteConfig.location}`}
         fill
         priority

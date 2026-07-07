@@ -1,0 +1,368 @@
+// File-backed store for all admin-editable site content.
+//
+// Deliberately dependency-free (no DB migration required) so the admin can
+// start editing content immediately: everything lives in a single JSON file
+// on disk, seeded from `DEFAULT_CONTENT` the first time it's read. This
+// mirrors the philosophy in `admin-auth.ts` — the smallest thing that works
+// for one property's internal staff tool.
+//
+// If you later want multi-editor conflict resolution, versioning, or to
+// move this into MySQL alongside Reservation/ContactSubmission, swap the
+// read/write functions below for Prisma calls — the rest of the app only
+// ever calls `getSiteContent()` / `updateSiteContent()`.
+
+import fs from "fs";
+import path from "path";
+import type { SiteContent, ContentSection } from "@/lib/content-types";
+
+const DATA_DIR = path.join(process.cwd(), "content-data");
+const DATA_FILE = path.join(DATA_DIR, "site-content.json");
+
+export const DEFAULT_CONTENT: SiteContent = {
+  siteConfig: {
+    name: "SOLTERRA",
+    fullName: "Solterra Cliff House",
+    tagline: "A conservatory above the sea",
+    description:
+      "Solterra Cliff House is a 42-suite five-star retreat set into the botanical cliffs above the Amalfi coastline — glasshouse dining, a stone-carved spa, and rooms built around the view.",
+    location: "Path of the Gods, Praiano, Amalfi Coast, Italy",
+    phone: "+39 089 555 0142",
+    whatsapp: "+39 089 555 0142",
+    email: "reservations@solterracliffhouse.com",
+    coordinates: { lat: 40.6157, lng: 14.4756 },
+    social: {
+      instagram: "https://instagram.com",
+      facebook: "https://facebook.com",
+      pinterest: "https://pinterest.com",
+      x: "https://x.com",
+    },
+    nav: [
+      { label: "Rooms & Suites", href: "/rooms" },
+      { label: "Dining", href: "/dining" },
+      { label: "Spa & Wellness", href: "/spa" },
+      { label: "Gallery", href: "/gallery" },
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+    ],
+    bookingCta: "Check Availability",
+  },
+
+  home: {
+    heroImage: "https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?q=80&w=2400&auto=format&fit=crop",
+    amenities: [
+      { icon: "Waves", title: "Salt-water Infinity Pool", desc: "Cantilevered above the cove, heated year-round." },
+      { icon: "UtensilsCrossed", title: "Michelin-Key Dining", desc: "Three restaurants, one Michelin star." },
+      { icon: "Flower2", title: "Basalt Thermal Spa", desc: "A stone-carved circuit built into the cliff." },
+      { icon: "Sailboat", title: "Private Cove Access", desc: "Direct stairs to a members-only inlet." },
+      { icon: "Wine", title: "Cellar & Cigar Lounge", desc: "Rare amaro, poured by candlelight." },
+      { icon: "Dumbbell", title: "Cliffside Fitness Studio", desc: "Open-air training with sea views." },
+    ],
+    stats: [
+      { value: 42, label: "Suites & Rooms" },
+      { value: 3, label: "Michelin Keys" },
+      { value: 18, suffix: "k+", label: "Guests Hosted" },
+      { value: 97, suffix: "%", label: "Return Intent" },
+    ],
+  },
+
+  rooms: [
+    {
+      slug: "conservatory-garden-room",
+      name: "Conservatory Garden Room",
+      category: "Garden",
+      pricePerNight: 480,
+      size: "38 m²",
+      maxGuests: 2,
+      bedType: "1 King Bed",
+      view: "Terraced Garden",
+      description:
+        "Ground-floor rooms opening onto the lemon terraces, with limewashed walls, brass fittings, and a private sitting nook framed by climbing jasmine.",
+      features: ["Private terrace", "Rain shower", "Espresso bar", "Linen loungewear", "Ceiling fan + AC"],
+      images: [
+        "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1600&auto=format&fit=crop",
+      ],
+      available: true,
+      unitsLeft: 6,
+    },
+    {
+      slug: "cliffside-view-room",
+      name: "Cliffside View Room",
+      category: "Cliffside",
+      pricePerNight: 620,
+      size: "42 m²",
+      maxGuests: 2,
+      bedType: "1 King Bed",
+      view: "Open Sea",
+      description:
+        "Set two floors above the water, each room is oriented for uninterrupted sunset views, with a stone soaking tub positioned at the window.",
+      features: ["Window-side soaking tub", "Private balcony", "Nespresso + minibar", "Egyptian cotton linens", "Smart climate control"],
+      images: [
+        "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=1600&auto=format&fit=crop",
+      ],
+      available: true,
+      unitsLeft: 4,
+    },
+    {
+      slug: "belvedere-suite",
+      name: "Belvedere Suite",
+      category: "Suite",
+      pricePerNight: 980,
+      size: "68 m²",
+      maxGuests: 3,
+      bedType: "1 King Bed + Daybed",
+      view: "Panoramic Coastline",
+      description:
+        "A corner suite wrapped in glass on two sides, with a sunken lounge, wood-burning fireplace, and a wraparound balcony that catches both sunrise and sunset.",
+      features: ["Wraparound balcony", "Wood-burning fireplace", "Separate lounge", "Butler service", "Freestanding copper tub"],
+      images: [
+        "https://images.unsplash.com/photo-1615874959474-d609969a20ed?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?q=80&w=1600&auto=format&fit=crop",
+      ],
+      available: true,
+      unitsLeft: 2,
+    },
+    {
+      slug: "grotto-villa",
+      name: "Grotto Villa",
+      category: "Villa",
+      pricePerNight: 1850,
+      size: "140 m²",
+      maxGuests: 5,
+      bedType: "2 King Beds",
+      view: "Private Cove",
+      description:
+        "A stand-alone villa carved into the rock face with direct stair access to a private cove, its own infinity plunge pool, and a resident host on call.",
+      features: ["Private plunge pool", "Direct cove access", "Full kitchen", "Dedicated host", "Outdoor dining terrace"],
+      images: [
+        "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=1600&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=1600&auto=format&fit=crop",
+      ],
+      available: false,
+      unitsLeft: 0,
+    },
+  ],
+
+  dining: {
+    venues: [
+      {
+        name: "Il Vetro",
+        tagline: "Glasshouse dining, cliff-edge",
+        hours: "7:30 PM – 11:00 PM · Tue–Sun",
+        description:
+          "Our signature glasshouse restaurant, built into the rock with a retractable roof. Chef Elena Moretti's tasting menu changes with what the coast gives up each morning.",
+        image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop",
+      },
+      {
+        name: "La Terrazza",
+        tagline: "All-day terrace café",
+        hours: "7:00 AM – 6:00 PM · Daily",
+        description:
+          "Wood-fired focaccia, citrus from the garden, and the coast's best espresso, served on a terrace that catches the morning light.",
+        image: "https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1600&auto=format&fit=crop",
+      },
+      {
+        name: "The Grotto Bar",
+        tagline: "Cellar bar & cigar lounge",
+        hours: "6:00 PM – 1:00 AM · Daily",
+        description: "A cave-cellar bar stocked with amaro and rare vermouth, where the sommelier pours by candlelight.",
+        image: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?q=80&w=1600&auto=format&fit=crop",
+      },
+    ],
+    menu: {
+      title: "Il Vetro — Tasting Menu",
+      courses: [
+        { course: "Amuse-bouche", item: "Sea urchin, brown butter, lemon leaf" },
+        { course: "First", item: "Hand-cut tagliolini, bottarga, wild fennel" },
+        { course: "Second", item: "Line-caught turbot, artichoke, coastal herbs" },
+        { course: "Third", item: "Slow-roast lamb, charred onion, salsa verde" },
+        { course: "Dessert", item: "Limoncello semifreddo, basil, olive oil crumble" },
+      ],
+      price: 195,
+    },
+    chef: {
+      name: "Elena Moretti",
+      title: "Executive Chef",
+      bio: "Raised in a fishing family on this coastline, Elena trained in Lyon and Modena before returning home to build a menu around what her father still brings in each morning.",
+      image: "https://images.unsplash.com/photo-1583394293214-28ded15ee548?q=80&w=1200&auto=format&fit=crop",
+    },
+  },
+
+  spa: {
+    treatments: [
+      {
+        name: "Stone Ritual",
+        duration: "90 min",
+        price: 260,
+        description: "Warm basalt stones and marjoram oil, worked in long strokes to release the coast from your shoulders.",
+      },
+      {
+        name: "Citrus & Salt Polish",
+        duration: "60 min",
+        price: 180,
+        description: "A whole-body exfoliation using salt from the bay and oil pressed from our own lemon terraces.",
+      },
+      {
+        name: "Grotto Facial",
+        duration: "75 min",
+        price: 220,
+        description: "Cold-water algae and marine collagen, finished with a cryo-jade roller drawn from our plunge pool.",
+      },
+      {
+        name: "Wild Herb Massage",
+        duration: "50 min",
+        price: 150,
+        description: "Rosemary and bay laurel, harvested that morning from the hillside behind the spa.",
+      },
+    ],
+    packages: [
+      { name: "Half-Day Reset", price: 340, includes: ["60-min massage", "Thermal circuit access", "Garden lunch"] },
+      {
+        name: "Full Coastal Retreat",
+        price: 620,
+        includes: ["90-min Stone Ritual", "Facial", "Thermal circuit access", "Private cabana", "Lunch + tasting"],
+      },
+    ],
+    facilities: [
+      "Basalt thermal circuit",
+      "Salt-water infinity pool",
+      "Cliffside sauna",
+      "Cold plunge grotto",
+      "Outdoor yoga terrace",
+      "Herbal steam room",
+    ],
+  },
+
+  gallery: [
+    { src: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1200&auto=format&fit=crop", category: "Rooms", alt: "Cliffside room with soaking tub facing the sea", w: 4, h: 5 },
+    { src: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1200&auto=format&fit=crop", category: "Rooms", alt: "Garden room with limewashed walls", w: 4, h: 3 },
+    { src: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200&auto=format&fit=crop", category: "Dining", alt: "Glasshouse restaurant at dusk", w: 3, h: 4 },
+    { src: "https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1200&auto=format&fit=crop", category: "Dining", alt: "Terrace café breakfast spread", w: 4, h: 3 },
+    { src: "https://images.unsplash.com/photo-1544161515638-e0ab5c0a5a4e?q=80&w=1200&auto=format&fit=crop", category: "Spa", alt: "Basalt thermal pool", w: 4, h: 5 },
+    { src: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1200&auto=format&fit=crop", category: "Spa", alt: "Spa treatment room with candlelight", w: 3, h: 4 },
+    { src: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop", category: "Grounds", alt: "Lemon terrace garden path", w: 4, h: 3 },
+    { src: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1200&auto=format&fit=crop", category: "Grounds", alt: "Infinity pool overlooking the coast", w: 4, h: 5 },
+    { src: "https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?q=80&w=1200&auto=format&fit=crop", category: "Coastline", alt: "Amalfi coastline at golden hour", w: 4, h: 3 },
+    { src: "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=1200&auto=format&fit=crop", category: "Coastline", alt: "Private cove access stairway", w: 3, h: 4 },
+    { src: "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1200&auto=format&fit=crop", category: "Rooms", alt: "Suite lounge with fireplace", w: 4, h: 3 },
+    { src: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?q=80&w=1200&auto=format&fit=crop", category: "Dining", alt: "Grotto cellar bar", w: 3, h: 4 },
+  ],
+
+  testimonials: [
+    {
+      name: "Margaux L.",
+      origin: "Paris, France",
+      quote: "Every window at Solterra is composed like a painting. The staff remembered our anniversary without being told twice.",
+      rating: 5,
+    },
+    {
+      name: "David & Priya K.",
+      origin: "Singapore",
+      quote: "We've stayed at most of the well-known coastal properties. This is the first one that felt personal rather than performed.",
+      rating: 5,
+    },
+    {
+      name: "Julian M.",
+      origin: "New York, USA",
+      quote: "The Grotto Villa's plunge pool at sunrise is worth the trip alone. Booking again before we'd even checked out.",
+      rating: 5,
+    },
+    {
+      name: "Anke B.",
+      origin: "Hamburg, Germany",
+      quote: "Il Vetro's tasting menu was the best meal of our trip through Italy — and we ate very well that week.",
+      rating: 5,
+    },
+  ],
+
+  faqs: [
+    {
+      q: "What time is check-in and check-out?",
+      a: "Check-in is from 3:00 PM and check-out is by 11:00 AM. Early arrival and late departure can be arranged in advance, subject to availability.",
+    },
+    {
+      q: "Is Solterra suitable for children?",
+      a: "We welcome guests of all ages in our Garden Rooms, Suites and Villas. Cliffside View Rooms are recommended for guests 12 and older, given the open-tub layout.",
+    },
+    {
+      q: "Do you offer airport or port transfers?",
+      a: "Yes — private car transfers from Naples International Airport and boat transfers from Salerno or Positano can be arranged by our concierge at the time of booking.",
+    },
+    {
+      q: "What is your cancellation policy?",
+      a: "Standard rates are fully refundable up to 7 days before arrival. Non-refundable rates offer a reduced price and can be modified only in exceptional circumstances.",
+    },
+    {
+      q: "Is the property accessible?",
+      a: "Garden Rooms and the main restaurant are step-free from the lower terrace entrance. Please contact our concierge ahead of arrival so we can prepare accordingly.",
+    },
+    {
+      q: "Are pets allowed?",
+      a: "Well-behaved dogs under 15kg are welcome in Garden Rooms and Villas for an additional fee. Please let us know in advance.",
+    },
+  ],
+
+  about: {
+    storyHeading: "Three generations on one rock face",
+    storyParagraphs: [
+      "In 1961, Salvatore Greco converted his family's fishing house on the Path of the Gods into six rooms for the first travelers making their way down the coast on foot. His daughter added the glasshouse restaurant in 1988. Her son, Marco, now runs the property with the same instruction his grandfather gave him: never let a room compete with the view.",
+      "Today Solterra holds 42 rooms, suites, and one villa, three restaurants, and a spa carved directly into the basalt — but the terraces, the citrus grove, and the original stone stairs to the water are unchanged.",
+    ],
+    sustainability: [
+      { icon: "Sun", title: "Solar-Assisted Power", desc: "Rooftop solar covers roughly 40% of the property's energy load." },
+      { icon: "Droplets", title: "Spring-Fed Water", desc: "Our thermal pools and gardens draw from the same natural spring, filtered and recirculated." },
+      { icon: "Leaf", title: "Terrace Farming", desc: "Citrus, herbs, and vegetables for Il Vetro are grown on our own hillside terraces." },
+      { icon: "Recycle", title: "Zero Single-Use Plastic", desc: "Glass, ceramic, and linen have replaced disposable service ware property-wide since 2022." },
+    ],
+    staff: [
+      { name: "Elena Moretti", role: "Executive Chef", image: "https://images.unsplash.com/photo-1583394293214-28ded15ee548?q=80&w=800&auto=format&fit=crop" },
+      { name: "Marco Ferrante", role: "General Manager", image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop" },
+      { name: "Sofia Greco", role: "Spa Director", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=800&auto=format&fit=crop" },
+      { name: "Luca Bianchi", role: "Head Concierge", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800&auto=format&fit=crop" },
+    ],
+    awards: [
+      { year: "2025", title: "Condé Nast Traveler — Gold List" },
+      { year: "2024", title: "Michelin Key — Three Keys" },
+      { year: "2024", title: "World's Leading Cliffside Retreat, World Travel Awards" },
+      { year: "2023", title: "Il Vetro — 1 Michelin Star" },
+    ],
+  },
+};
+
+function ensureStore(): void {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(DATA_FILE)) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(DEFAULT_CONTENT, null, 2), "utf-8");
+  }
+}
+
+/** Reads the full content object, seeding the file with defaults on first run. */
+export async function getSiteContent(): Promise<SiteContent> {
+  ensureStore();
+  try {
+    const raw = fs.readFileSync(DATA_FILE, "utf-8");
+    const parsed = JSON.parse(raw) as Partial<SiteContent>;
+    // Merge over defaults so new fields introduced by an app update (e.g. a
+    // new section) show up even for a content file written by an older version.
+    return { ...DEFAULT_CONTENT, ...parsed };
+  } catch {
+    return DEFAULT_CONTENT;
+  }
+}
+
+/** Replaces a single top-level section (e.g. "rooms", "siteConfig") and persists it. */
+export async function updateSiteContentSection<K extends ContentSection>(
+  section: K,
+  data: SiteContent[K]
+): Promise<SiteContent> {
+  const current = await getSiteContent();
+  const next: SiteContent = { ...current, [section]: data };
+  ensureStore();
+  fs.writeFileSync(DATA_FILE, JSON.stringify(next, null, 2), "utf-8");
+  return next;
+}

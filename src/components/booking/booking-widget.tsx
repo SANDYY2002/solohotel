@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, Users, Tag, Search, CheckCircle2, Loader2, User, Mail, Phone } from "lucide-react";
 import { Label, Select, Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { rooms } from "@/data/rooms";
+import { useSiteContent } from "@/lib/site-content-context";
 import { formatUSD, nightsBetween } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,7 @@ function todayISO(offsetDays = 0) {
 }
 
 export function BookingWidget({ compact = false }: { compact?: boolean }) {
+  const { rooms } = useSiteContent();
   const [step, setStep] = React.useState<Step>("search");
   const [checkIn, setCheckIn] = React.useState(todayISO(14));
   const [checkOut, setCheckOut] = React.useState(todayISO(17));
@@ -41,7 +42,7 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
 
   const matches = React.useMemo(
     () => rooms.filter((r) => (roomType === "Any" ? true : r.category === roomType) && Number(guests) <= r.maxGuests),
-    [roomType, guests]
+    [roomType, guests, rooms]
   );
 
   function handleSearch(e: React.FormEvent) {
@@ -145,7 +146,7 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
             <div className="md:col-span-1">
               <Label htmlFor="room-type">Room Type</Label>
               <Select id="room-type" value={roomType} onChange={(e) => setRoomType(e.target.value)}>
-                {["Any", "Garden", "Cliffside", "Suite", "Villa"].map((t) => (
+                {["Any", ...Array.from(new Set(rooms.map((r) => r.category)))].map((t) => (
                   <option key={t} value={t}>
                     {t}
                   </option>

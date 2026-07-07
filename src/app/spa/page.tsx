@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Reveal } from "@/components/shared/reveal";
 import { Button } from "@/components/ui/button";
-import { spaTreatments, spaPackages, spaFacilities, galleryImages } from "@/data/content";
+import { getSiteContent } from "@/lib/content-store";
 import { formatUSD } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -12,8 +12,10 @@ export const metadata: Metadata = {
   description: "A basalt thermal circuit carved into the cliff, treatments drawn from the hillside and the sea, and a salt-water infinity pool.",
 };
 
-export default function SpaPage() {
-  const spaImages = galleryImages.filter((g) => g.category === "Spa");
+export default async function SpaPage() {
+  const { spa, gallery } = await getSiteContent();
+  const { treatments: spaTreatments, packages: spaPackages, facilities: spaFacilities } = spa;
+  const spaImages = gallery.filter((g) => g.category === "Spa");
 
   return (
     <>

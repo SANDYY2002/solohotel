@@ -1,14 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { rooms } from "@/data/rooms";
+import { getSiteContent } from "@/lib/content-store";
 import { formatUSD } from "@/lib/utils";
 import { Reveal } from "@/components/shared/reveal";
 import { Badge } from "@/components/ui/badge";
 
 const FALLBACK_ROOM_IMAGE = "/images/room-placeholder.jpg";
 
-export function FeaturedRooms() {
+export async function FeaturedRooms() {
+  const { rooms } = await getSiteContent();
   const featured = rooms.slice(0, 3);
 
   return (

@@ -5,9 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, Loader2 } from "lucide-react";
 import { Input, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { siteConfig } from "@/lib/site-config";
+import { useSiteContent } from "@/lib/site-content-context";
 
 export default function AdminLoginPage() {
+  const { siteConfig } = useSiteContent();
   const router = useRouter();
   const params = useSearchParams();
   const [password, setPassword] = React.useState("");

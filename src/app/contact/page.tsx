@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { Phone, Mail, Instagram, Facebook } from "lucide-react";
+import { Mail, Instagram, Facebook } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Reveal } from "@/components/shared/reveal";
 import { LocationMap } from "@/components/shared/location-map";
 import { ContactForm } from "@/components/contact/contact-form";
-import { siteConfig } from "@/lib/site-config";
+import { PhoneLink } from "@/components/shared/phone-link";
+import { getSiteContent } from "@/lib/content-store";
 
 export const metadata: Metadata = {
   title: "Contact",
   description: "Reach the Solterra Cliff House concierge team by phone, email, or message — or find us on the Path of the Gods.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const { siteConfig } = await getSiteContent();
   return (
     <>
       <PageHeader
@@ -32,11 +34,13 @@ export default function ContactPage() {
           <p className="eyebrow">Direct lines</p>
           <h2 className="mt-3 mb-8 font-display text-3xl">Talk to the concierge</h2>
           <ul className="space-y-4 text-stone-700 dark:text-stone-300">
-            <li className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-bronze-400" />
-              <a href={`tel:${siteConfig.phone.replace(/\s/g, "")}`} className="hover:text-bronze-500">
-                {siteConfig.phone}
-              </a>
+            <li>
+              <PhoneLink
+                phone={siteConfig.phone}
+                whatsapp={siteConfig.whatsapp}
+                className="hover:text-bronze-500"
+                iconClassName="text-bronze-400"
+              />
             </li>
             <li className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-bronze-400" />

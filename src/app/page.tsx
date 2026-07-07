@@ -9,11 +9,12 @@ import { GalleryPreview } from "@/components/home/gallery-preview";
 import { FaqSection } from "@/components/home/faq-section";
 import { LocationMap } from "@/components/shared/location-map";
 import { Reveal } from "@/components/shared/reveal";
-import { siteConfig } from "@/lib/site-config";
+import { getSiteContent } from "@/lib/content-store";
 
-export const metadata: Metadata = {
-  title: `${siteConfig.name} — ${siteConfig.tagline}`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { siteConfig } = await getSiteContent();
+  return { title: `${siteConfig.name} — ${siteConfig.tagline}` };
+}
 
 export default function HomePage() {
   return (

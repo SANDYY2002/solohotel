@@ -4,7 +4,7 @@ import { Clock } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Reveal } from "@/components/shared/reveal";
 import { Button } from "@/components/ui/button";
-import { diningVenues, menuSample, chef } from "@/data/content";
+import { getSiteContent } from "@/lib/content-store";
 import { formatUSD } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -12,7 +12,9 @@ export const metadata: Metadata = {
   description: "Il Vetro, La Terrazza, and The Grotto Bar — three dining venues at Solterra Cliff House, led by Executive Chef Elena Moretti.",
 };
 
-export default function DiningPage() {
+export default async function DiningPage() {
+  const { dining } = await getSiteContent();
+  const { venues: diningVenues, menu: menuSample, chef } = dining;
   return (
     <>
       <PageHeader

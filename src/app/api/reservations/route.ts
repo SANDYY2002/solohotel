@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { rooms } from "@/data/rooms";
+import { getSiteContent } from "@/lib/content-store";
 import { nightsBetween } from "@/lib/utils";
 
 function generateConfirmationCode() {
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
     specialRequests,
   } = (body ?? {}) as Record<string, unknown>;
 
+  const { rooms } = await getSiteContent();
   const room = rooms.find((r) => r.slug === roomSlug);
   if (!room) {
     return NextResponse.json({ error: "Unknown room type." }, { status: 400 });

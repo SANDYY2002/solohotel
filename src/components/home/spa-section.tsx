@@ -1,17 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { spaFacilities } from "@/data/content";
+import { getSiteContent } from "@/lib/content-store";
 import { Reveal } from "@/components/shared/reveal";
 import { Button } from "@/components/ui/button";
 
-// NOTE: restaurant-section.tsx pulls its image from `diningVenues` in data/content.
-// This section still hardcodes its image — consider adding a `spaImage` (and the
-// paragraph below) to data/content.ts so all "on-property" sections read from one
-// source and don't drift out of sync when content changes.
 const SPA_IMAGE = "https://images.unsplash.com/photo-1544161515638-e0ab5c0a5a4e?q=80&w=1600&auto=format&fit=crop";
 
-export function SpaSection() {
+export async function SpaSection() {
+  const { spa } = await getSiteContent();
   return (
     <section className="bg-stone-100 dark:bg-stone-900/40" aria-labelledby="spa-heading">
       <div className="container-hotel grid gap-10 py-24 md:grid-cols-2 md:items-center">
@@ -35,7 +32,7 @@ export function SpaSection() {
             this coastline for centuries.
           </p>
           <ul className="mt-6 grid grid-cols-2 gap-y-2 text-sm text-stone-600 dark:text-stone-400">
-            {spaFacilities.map((f) => (
+            {spa.facilities.map((f) => (
               <li key={f} className="flex items-center gap-2">
                 <span className="h-1 w-1 rounded-full bg-bronze-400" aria-hidden /> {f}
               </li>

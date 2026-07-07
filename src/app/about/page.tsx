@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Leaf, Sun, Recycle, Droplets } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Reveal } from "@/components/shared/reveal";
 import { ContourMotif } from "@/components/shared/contour-motif";
-import { staff, awards } from "@/data/content";
+import { getSiteContent } from "@/lib/content-store";
+import { resolveIcon } from "@/lib/icon-map";
 
 export const metadata: Metadata = {
   title: "About",
   description: "The story of Solterra Cliff House — a family property carved into the Amalfi coastline, its people, its awards, and its approach to sustainability.",
 };
 
-const sustainability = [
-  { icon: Sun, title: "Solar-Assisted Power", desc: "Rooftop solar covers roughly 40% of the property's energy load." },
-  { icon: Droplets, title: "Spring-Fed Water", desc: "Our thermal pools and gardens draw from the same natural spring, filtered and recirculated." },
-  { icon: Leaf, title: "Terrace Farming", desc: "Citrus, herbs, and vegetables for Il Vetro are grown on our own hillside terraces." },
-  { icon: Recycle, title: "Zero Single-Use Plastic", desc: "Glass, ceramic, and linen have replaced disposable service ware property-wide since 2022." },
-];
-
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { about } = await getSiteContent();
+  const { storyHeading, storyParagraphs, sustainability, staff, awards } = about;
   return (
     <>
       <PageHeader
@@ -33,18 +28,12 @@ export default function AboutPage() {
         <div className="grid gap-12 md:grid-cols-2 md:items-center">
           <Reveal>
             <p className="eyebrow">Our story</p>
-            <h2 className="mt-3 font-display text-3xl md:text-4xl">Three generations on one rock face</h2>
-            <p className="mt-5 text-stone-600 dark:text-stone-400">
-              In 1961, Salvatore Greco converted his family&apos;s fishing house on the Path of the Gods into six rooms
-              for the first travelers making their way down the coast on foot. His daughter added the glasshouse
-              restaurant in 1988. Her son, Marco, now runs the property with the same instruction his grandfather
-              gave him: never let a room compete with the view.
-            </p>
-            <p className="mt-4 text-stone-600 dark:text-stone-400">
-              Today Solterra holds 42 rooms, suites, and one villa, three restaurants, and a spa carved directly
-              into the basalt — but the terraces, the citrus grove, and the original stone stairs to the water are
-              unchanged.
-            </p>
+            <h2 className="mt-3 font-display text-3xl md:text-4xl">{storyHeading}</h2>
+            {storyParagraphs.map((p, i) => (
+              <p key={i} className="mt-5 text-stone-600 first:mt-5 dark:text-stone-400">
+                {p}
+              </p>
+            ))}
           </Reveal>
           <Reveal delay={0.1} className="relative aspect-[4/5] overflow-hidden rounded-sm">
             <Image
@@ -108,7 +97,7 @@ export default function AboutPage() {
         </Reveal>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {sustainability.map((s, i) => {
-            const Icon = s.icon;
+            const Icon = resolveIcon(s.icon);
             return (
               <Reveal key={s.title} delay={i * 0.06}>
                 <Icon className="h-6 w-6 text-bronze-400" aria-hidden />

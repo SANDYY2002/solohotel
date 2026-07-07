@@ -1,18 +1,13 @@
-import { Waves, UtensilsCrossed, Flower2, Sailboat, Wine, Dumbbell } from "lucide-react";
 import { Reveal } from "@/components/shared/reveal";
 import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { ContourMotif } from "@/components/shared/contour-motif";
+import { getSiteContent } from "@/lib/content-store";
+import { resolveIcon } from "@/lib/icon-map";
 
-const amenities = [
-  { icon: Waves, title: "Salt-water Infinity Pool", desc: "Cantilevered above the cove, heated year-round." },
-  { icon: UtensilsCrossed, title: "Michelin-Key Dining", desc: "Three restaurants, one Michelin star." },
-  { icon: Flower2, title: "Basalt Thermal Spa", desc: "A stone-carved circuit built into the cliff." },
-  { icon: Sailboat, title: "Private Cove Access", desc: "Direct stairs to a members-only inlet." },
-  { icon: Wine, title: "Cellar & Cigar Lounge", desc: "Rare amaro, poured by candlelight." },
-  { icon: Dumbbell, title: "Cliffside Fitness Studio", desc: "Open-air training with sea views." },
-];
+export async function Amenities() {
+  const { home } = await getSiteContent();
+  const { amenities, stats } = home;
 
-export function Amenities() {
   return (
     <section className="bg-conservatory-900 py-24 text-stone-100" aria-labelledby="amenities-heading">
       <div className="container-hotel">
@@ -25,7 +20,7 @@ export function Amenities() {
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {amenities.map((a, i) => {
-            const Icon = a.icon;
+            const Icon = resolveIcon(a.icon);
             return (
               <Reveal key={a.title} delay={i * 0.06} className="flex gap-4">
                 <Icon className="mt-1 h-6 w-6 flex-shrink-0 text-bronze-300" aria-hidden />
@@ -41,10 +36,9 @@ export function Amenities() {
         <ContourMotif className="my-16 h-8 text-bronze-400/40" />
 
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          <AnimatedCounter value={42} label="Suites & Rooms" />
-          <AnimatedCounter value={3} label="Michelin Keys" />
-          <AnimatedCounter value={18} suffix="k+" label="Guests Hosted" />
-          <AnimatedCounter value={97} suffix="%" label="Return Intent" />
+          {stats.map((s) => (
+            <AnimatedCounter key={s.label} value={s.value} suffix={s.suffix} label={s.label} />
+          ))}
         </div>
       </div>
     </section>

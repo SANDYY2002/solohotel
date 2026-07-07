@@ -1,8 +1,9 @@
-import { faqs } from "@/data/content";
+import { getSiteContent } from "@/lib/content-store";
 import { Reveal } from "@/components/shared/reveal";
 import { Accordion } from "@/components/ui/accordion";
 
-export function FaqSection() {
+export async function FaqSection() {
+  const { faqs } = await getSiteContent();
   return (
     <section className="container-hotel py-24" aria-labelledby="faq-heading">
       <Reveal className="mx-auto max-w-2xl text-center">

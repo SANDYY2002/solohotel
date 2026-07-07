@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { LayoutDashboard, Mail, CalendarCheck } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
+import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate } from "lucide-react";
+import { getSiteContent } from "@/lib/content-store";
 import { AdminLogoutButton } from "@/components/admin/logout-button";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { siteConfig } = await getSiteContent();
   return (
     <div className="flex min-h-screen bg-stone-50 dark:bg-conservatory-950">
       <aside className="hidden w-64 flex-shrink-0 border-r border-stone-200 p-6 dark:border-stone-800 md:block">
@@ -12,6 +13,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="space-y-1">
           <Link href="/admin" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
             <LayoutDashboard className="h-4 w-4" /> Overview
+          </Link>
+          <Link href="/admin/content" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
+            <LayoutTemplate className="h-4 w-4" /> Site Content
           </Link>
           <Link href="/admin/contacts" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
             <Mail className="h-4 w-4" /> Contact Messages

@@ -3,27 +3,31 @@
 import * as React from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import { testimonials } from "@/data/content";
+import { useSiteContent } from "@/lib/site-content-context";
 import { Reveal } from "@/components/shared/reveal";
 
 const AUTOPLAY_INTERVAL_MS = 6000;
 
 export function TestimonialsSection() {
+  const { testimonials } = useSiteContent();
   const [index, setIndex] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
   const reduceMotion = useReducedMotion();
   const active = testimonials[index];
 
-  const go = React.useCallback((dir: 1 | -1) => {
-    setIndex((i) => (i + dir + testimonials.length) % testimonials.length);
-  }, []);
+  const go = React.useCallback(
+    (dir: 1 | -1) => {
+      setIndex((i) => (i + dir + testimonials.length) % testimonials.length);
+    },
+    [testimonials.length]
+  );
 
   // Autoplay: pauses on hover/focus and is skipped entirely for reduced-motion users.
   React.useEffect(() => {
     if (isPaused || reduceMotion || testimonials.length <= 1) return;
     const id = setInterval(() => go(1), AUTOPLAY_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [isPaused, reduceMotion, go]);
+  }, [isPaused, reduceMotion, go, testimonials.length]);
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowLeft") go(-1);

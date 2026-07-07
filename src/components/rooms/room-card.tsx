@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { Room } from "@/data/rooms";
+import { Room } from "@/lib/content-types";
 import { formatUSD } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

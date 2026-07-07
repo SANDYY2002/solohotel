@@ -39,10 +39,12 @@ npm run lint    # ESLint
 ```
 prisma/
   schema.prisma          Database schema (ContactSubmission, Reservation)
+content-data/
+  site-content.json       All editable site content (auto-created on first run)
 src/
   middleware.ts           Protects /admin/* behind the session cookie
   app/
-    layout.tsx            Root layout: fonts, SEO metadata, theme, nav/footer/chat
+    layout.tsx            Root layout: fonts, SEO metadata, theme, content provider, nav/footer/chat
     page.tsx               Home
     rooms/page.tsx          Rooms & Suites
     dining/page.tsx         Dining
@@ -60,12 +62,16 @@ src/
       admin/logout/route.ts        POST — clears session cookie
       admin/contacts/[id]/route.ts      PATCH — update message status
       admin/reservations/[id]/route.ts  PATCH — update reservation status
+      admin/content/route.ts            GET/PUT — read & save any site content section
     admin/
       login/page.tsx                Staff login
       (dashboard)/layout.tsx        Sidebar shell (not applied to /login)
       (dashboard)/page.tsx          Overview counts
       (dashboard)/contacts/page.tsx      Contact messages table
       (dashboard)/reservations/page.tsx  Reservations table
+      (dashboard)/content/page.tsx        Site Content hub — links to every editable section
+      (dashboard)/content/{settings,home,rooms,dining,spa,gallery,testimonials,faqs,about}/page.tsx
+                                          One editor per section (see "Site content management" below)
   components/
     ui/           shadcn-style primitives (button, input, badge, accordion)
     layout/       navbar, footer
@@ -74,11 +80,16 @@ src/
     rooms/        room card + category-filtered room browser
     gallery/      masonry grid + lightbox
     contact/      contact form
-    admin/        logout button, status dropdown
-    shared/       theme provider/toggle, reveal animation, contour motif,
-                  animated counter, newsletter form, live chat placeholder, map, page header
-  data/           dummy content: rooms.ts, content.ts (dining, spa, testimonials, gallery, FAQ, staff, awards)
-  lib/            site-config.ts, utils.ts, prisma.ts, admin-auth.ts
+    admin/        logout button, status dropdown, array-editor, string-list-editor, save-bar,
+                  content/  (one editor component per section, paired with the pages above)
+    shared/       theme provider/toggle, reveal animation, contour motif, animated counter,
+                  newsletter form, live chat placeholder, map, page header, phone-link (call/WhatsApp)
+  lib/
+    content-store.ts        Reads/writes content-data/site-content.json (the CMS backend)
+    content-types.ts        TypeScript types for every editable field
+    site-content-context.tsx  React context so client components can read live content
+    icon-map.ts              Name → lucide-react icon lookup (for admin icon pickers)
+    utils.ts, prisma.ts, admin-auth.ts
 ```
 
 ## Booking system
@@ -148,11 +159,35 @@ Auth is a single shared password behind a signed, HTTP-only session cookie (`src
 - **Notifications:** the API routes (`src/app/api/contact/route.ts`, `src/app/api/reservations/route.ts`) have comments marking where to add email notifications (e.g. via Resend/SendGrid) so staff don't have to keep the dashboard open to notice new activity.
 - **Payment:** the booking flow holds a reservation with guest details but doesn't collect payment — wire in Stripe/your PMS at the point marked in `src/app/api/reservations/route.ts` before going live.
 
+## Site content management (admin CMS)
 
+Every piece of marketing copy on the site — not just contact messages and reservations — can be edited by staff at **`/admin/content`**, with no code changes or redeploy:
+
+- **Site Settings** — name, tagline, description, location, phone, WhatsApp number, email, map coordinates, social links, the navigation menu, and the booking button text
+- **Home Page** — hero image, the six on-property amenities, and the four stat counters
+- **Rooms & Suites** — add, edit, reorder, or delete room types: pricing, size, capacity, description, features, photos, and availability
+- **Dining** — restaurants/venues, the sample tasting menu (with courses), and the executive chef bio
+- **Spa & Wellness** — treatments, packages, and the facilities list
+- **Gallery** — every photo shown on `/gallery` and the homepage preview strip, with category tagging
+- **Testimonials** — guest quotes shown in the homepage carousel
+- **FAQs** — the accordion shown on the homepage
+- **About Page** — the property story, sustainability commitments, staff bios, and awards/press
+
+### How it works
+
+- Content lives in a single JSON file, `content-data/site-content.json`, created automatically (seeded with the current demo content) the first time the app reads it. There's no database migration to run — this is deliberately simpler than the Reservation/ContactSubmission tables, since it's just structured text and image URLs, not relational data.
+- Every public page reads through `src/lib/content-store.ts` (server components) or the `useSiteContent()` hook (`src/lib/site-content-context.tsx`, for client components like the booking widget, navbar, and hero) — so a save in the admin dashboard is reflected on the live site immediately, without a rebuild.
+- Each admin section is its own page under `/admin/content/*`, guarded by the same session-cookie middleware as the rest of `/admin`. Saving calls `PUT /api/admin/content` with `{ section, data }`, which is also auth-checked server-side.
+- Icons (for amenities and sustainability items) are stored as a name (e.g. `"Waves"`) and resolved to a `lucide-react` component via `src/lib/icon-map.ts` — add more icons to that map if you want more options in the picker.
+- If you later want multi-editor conflict handling, revision history, or to move this into MySQL alongside the other tables, `content-store.ts` is the only file that needs to change — every page and component just calls `getSiteContent()` / `useSiteContent()`.
+
+### Call or WhatsApp on every phone number
+
+Every phone number on the site (footer, contact page, the map card) now uses `src/components/shared/phone-link.tsx` instead of a plain `tel:` link. Clicking it opens a small menu with **Call** and **WhatsApp** options — WhatsApp opens `https://wa.me/<number>` in a new tab. Set the WhatsApp number (if it differs from the main phone number) under **Site Settings** in the admin dashboard.
 
 ## Content & imagery
 
-All copy, pricing, staff, and awards are placeholder content for a fictional property. Imagery is served from Unsplash for this demo — replace `next.config.mjs`'s `images.remotePatterns` and the `src/data/*.ts` image URLs with your DAM/CDN before launch.
+All copy, pricing, staff, and awards are placeholder content for a fictional property, editable via `/admin/content` (see above) or directly in `content-data/site-content.json`. Imagery is served from Unsplash for this demo — replace `next.config.mjs`'s `images.remotePatterns` and the image URLs (via the admin dashboard, or directly in the JSON file) with your DAM/CDN before launch.
 
 ## Accessibility & performance
 

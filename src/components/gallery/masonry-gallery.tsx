@@ -4,18 +4,20 @@ import * as React from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { galleryImages, type GalleryCategory } from "@/data/content";
+import { useSiteContent } from "@/lib/site-content-context";
+import type { GalleryCategory } from "@/lib/content-types";
 import { cn } from "@/lib/utils";
 
 const categories: (GalleryCategory | "All")[] = ["All", "Rooms", "Dining", "Spa", "Grounds", "Coastline"];
 
 export function MasonryGallery() {
+  const { gallery: galleryImages } = useSiteContent();
   const [filter, setFilter] = React.useState<(typeof categories)[number]>("All");
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
 
   const filtered = React.useMemo(
     () => (filter === "All" ? galleryImages : galleryImages.filter((img) => img.category === filter)),
-    [filter]
+    [filter, galleryImages]
   );
 
   const close = React.useCallback(() => setLightboxIndex(null), []);

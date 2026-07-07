@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { diningVenues } from "@/data/content";
+import { getSiteContent } from "@/lib/content-store";
 import { Reveal } from "@/components/shared/reveal";
 import { Button } from "@/components/ui/button";
 
-export function RestaurantSection() {
-  const venue = diningVenues[0];
+export async function RestaurantSection() {
+  const { dining } = await getSiteContent();
+  const venue = dining.venues[0];
   if (!venue) return null;
   return (
     <section className="container-hotel grid gap-10 py-24 md:grid-cols-2 md:items-center" aria-labelledby="dining-heading">

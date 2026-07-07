@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { Facebook, Instagram, MapPin, Mail, Phone } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
+import { Facebook, Instagram, MapPin, Mail } from "lucide-react";
+import { getSiteContent } from "@/lib/content-store";
 import { ContourMotif } from "@/components/shared/contour-motif";
 import { NewsletterForm } from "@/components/shared/newsletter-form";
+import { PhoneLink } from "@/components/shared/phone-link";
 
-export function Footer() {
+export async function Footer() {
+  const { siteConfig } = await getSiteContent();
   return (
     <footer className="bg-conservatory-950 text-stone-300">
       <div className="container-hotel pt-16">
@@ -44,8 +46,13 @@ export function Footer() {
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-bronze-400" /> {siteConfig.location}
             </li>
-            <li className="flex items-center gap-2">
-              <Phone className="h-4 w-4 flex-shrink-0 text-bronze-400" /> {siteConfig.phone}
+            <li>
+              <PhoneLink
+                phone={siteConfig.phone}
+                whatsapp={siteConfig.whatsapp}
+                className="text-stone-400 hover:text-stone-50"
+                iconClassName="text-bronze-400"
+              />
             </li>
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4 flex-shrink-0 text-bronze-400" /> {siteConfig.email}

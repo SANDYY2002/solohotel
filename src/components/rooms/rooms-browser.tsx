@@ -1,13 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { rooms, roomCategories } from "@/data/rooms";
+import { useSiteContent } from "@/lib/site-content-context";
 import { RoomCard } from "@/components/rooms/room-card";
 import { BookingWidget } from "@/components/booking/booking-widget";
 import { cn } from "@/lib/utils";
 
 export function RoomsBrowser() {
-  const [category, setCategory] = React.useState<(typeof roomCategories)[number]>("All");
+  const { rooms } = useSiteContent();
+  const roomCategories = React.useMemo(() => ["All", ...Array.from(new Set(rooms.map((r) => r.category)))], [rooms]);
+  const [category, setCategory] = React.useState<string>("All");
 
   const filtered = category === "All" ? rooms : rooms.filter((r) => r.category === category);
 

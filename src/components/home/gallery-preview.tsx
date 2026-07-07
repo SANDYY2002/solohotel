@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { galleryImages } from "@/data/content";
+import { getSiteContent } from "@/lib/content-store";
 import { Reveal } from "@/components/shared/reveal";
 
-export function GalleryPreview() {
-  const images = galleryImages.slice(0, 5);
+export async function GalleryPreview() {
+  const { gallery } = await getSiteContent();
+  const images = gallery.slice(0, 5);
   return (
     <section className="container-hotel py-24" aria-labelledby="gallery-heading">
       <Reveal className="mb-10 flex items-end justify-between">
