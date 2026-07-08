@@ -118,7 +118,16 @@ docker run --name solterra-mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABA
 
 > **Note:** the `-v solterra-mysql-data:/var/lib/mysql` flag stores the database in a named Docker volume, not inside the container itself. Without it, removing and recreating the container (e.g. `docker rm` + `docker run` again) wipes everything — reservations, contact messages, and all site content edited in `/admin/content`. Stopping/starting the same container (`docker stop` / `docker start`) is safe either way; it's only removal + recreation that loses data.
 
-Or use a managed instance for zero local setup — PlanetScale, Railway, and AWS RDS all work with the same `DATABASE_URL` approach.
+Or use a managed instance for zero local setup. **[TiDB Cloud Starter](https://tidbcloud.com)** is the one worth using if you want it free: it speaks the MySQL wire protocol (so nothing about this project changes — same `provider = "mysql"` in `prisma/schema.prisma`, same queries), and its free tier is permanent, not a trial — 5GB storage, 50M requests/month, no credit card required. (PlanetScale, once the default answer here, removed its free tier in 2024 and now starts at $5–39/month — TiDB is the closest still-free MySQL-compatible replacement.) Railway and AWS RDS also work with the same `DATABASE_URL` approach, but their free allowances are either small or time-limited.
+
+**Setting up TiDB Cloud Starter:**
+1. Sign up at [tidbcloud.com](https://tidbcloud.com) and create a free **Starter** cluster (no card needed).
+2. From the cluster's **Connect** panel, copy the host, port, and your generated username — TiDB prefixes it per-cluster, e.g. `xxxxxxxx.root`, not just `root`.
+3. Build your `DATABASE_URL` (TiDB requires TLS):
+   ```
+   DATABASE_URL="mysql://<prefix>.root:<password>@gateway01.<region>.prod.aws.tidbcloud.com:4000/solterra?sslaccept=strict"
+   ```
+4. Continue with steps 2–3 below as normal (`prisma generate`, `prisma db push`) — no schema or code changes needed.
 
 ### 2. Set up environment variables
 
@@ -156,11 +165,17 @@ Visit `/admin/login` and enter your `ADMIN_PASSWORD`. You'll land on `/admin`, w
 
 Auth is a single shared password behind a signed, HTTP-only session cookie (`src/lib/admin-auth.ts`, enforced by `src/middleware.ts`) — intentionally simple for a one-team internal tool. Swap in NextAuth/Clerk if you need multiple staff logins, roles, or an audit trail.
 
-### Going to production
+### Going to production (Vercel + TiDB)
 
-- **Database:** any managed MySQL works as-is — just point `DATABASE_URL` at it. No schema changes needed moving from local Docker MySQL to production MySQL.
-- **Notifications:** the API routes (`src/app/api/contact/route.ts`, `src/app/api/reservations/route.ts`) have comments marking where to add email notifications (e.g. via Resend/SendGrid) so staff don't have to keep the dashboard open to notice new activity.
-- **Payment:** the booking flow holds a reservation with guest details but doesn't collect payment — wire in Stripe/your PMS at the point marked in `src/app/api/reservations/route.ts` before going live.
+1. **Database:** point `DATABASE_URL` at your TiDB Cloud Starter connection string (see above) — no schema changes needed moving from local Docker MySQL to TiDB. Run `npx prisma db push` against it once, before or right after your first deploy — Vercel's build step does **not** run migrations automatically.
+2. **Environment variables** — add these in Vercel's Project Settings → Environment Variables:
+   - `DATABASE_URL` — your TiDB connection string
+   - `ADMIN_PASSWORD` — staff login password
+   - `ADMIN_SESSION_SECRET` — a long random string (`openssl rand -hex 32`)
+   - `BLOB_READ_WRITE_TOKEN` — added automatically once you create a Blob store under the **Storage** tab (needed for "upload from device" in `/admin/content`; without it, image fields still work by pasting a URL)
+3. **Serverless connection limits:** every Vercel function invocation can open its own DB connection, which is the usual way people run into connection-limit errors deploying Prisma to serverless. TiDB Cloud Starter allows up to 400 concurrent connections by default (5,000 once a spending limit is set), which comfortably covers this project's traffic — but if you ever see connection errors under load, add `&connection_limit=1` to the end of your `DATABASE_URL` first as a quick mitigation.
+4. **Notifications:** the API routes (`src/app/api/contact/route.ts`, `src/app/api/reservations/route.ts`) have comments marking where to add email notifications (e.g. via Resend/SendGrid) so staff don't have to keep the dashboard open to notice new activity.
+5. **Payment:** the booking flow holds a reservation with guest details but doesn't collect payment — wire in Stripe/your PMS at the point marked in `src/app/api/reservations/route.ts` before going live.
 
 ## Site content management (admin CMS)
 
