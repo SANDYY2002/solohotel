@@ -414,7 +414,7 @@ export function ContactForm() {
               <CheckCircle2 className="cf-success-icon" strokeWidth={1.5} />
               <h3 className="cf-success-title cf-serif">Message sent</h3>
               <p className="cf-success-body">
-                Thanks, {form.name.split(" ")[0] || "there"}. We've got your
+                Thanks, {form.name.split(" ")[0] || "there"}. We&apos;ve got your
                 note and will reply within 24 hours.
               </p>
               <button
@@ -508,7 +508,7 @@ export function ContactForm() {
                   style={{ marginBottom: "0.7rem" }}
                 >
                   <Compass size={13} />
-                  What's this about?
+                  What&apos;s this about?
                 </label>
                 <div className="cf-pills">
                   {SUBJECTS.map((subject) => (

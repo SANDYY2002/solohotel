@@ -54,6 +54,7 @@ export function ImageUploadField({
         {value ? (
           <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-sm border border-stone-200 bg-stone-100 dark:border-stone-700 dark:bg-stone-800">
             {/* Plain <img> — this can be a blob URL, a data URL mid-flight, or any external URL */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={value} alt="" className="h-full w-full object-cover" />
           </div>
         ) : (
@@ -157,6 +158,7 @@ export function MultiImageUploadField({
         <div className="flex flex-wrap gap-2">
           {value.map((url, index) => (
             <div key={index} className="group relative h-16 w-16 overflow-hidden rounded-sm border border-stone-200 dark:border-stone-700">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={url} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"
