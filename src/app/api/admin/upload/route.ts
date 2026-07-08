@@ -46,7 +46,11 @@ export async function POST(req: Request) {
   try {
     const blob = await put(key, file, { access: "public" });
     return NextResponse.json({ url: blob.url });
-  } catch {
-    return NextResponse.json({ error: "Upload failed. Please try again." }, { status: 500 });
+  } catch (err) {
+    // Surfacing the real message here (not just a generic string) since this
+    // route is already behind requireAdmin() — safe for an authenticated
+    // admin to see, and much faster to debug than digging through logs.
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: `Upload failed: ${message}` }, { status: 500 });
   }
 }
