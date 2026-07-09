@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Search } from "lucide-react";
 import { StatusEditor } from "@/components/admin/status-editor";
+import { PhoneLink } from "@/components/shared/phone-link";
 import { formatDate, formatUSD } from "@/lib/utils";
 import type { Reservation } from "@prisma/client";
 
@@ -81,7 +82,7 @@ export function ReservationsTable({ reservations }: { reservations: Reservation[
                 <td className="px-4 py-4">
                   <p className="font-medium">{r.guestName}</p>
                   <p className="text-stone-500">{r.guestEmail}</p>
-                  {r.guestPhone && <p className="text-stone-500">{r.guestPhone}</p>}
+                  {r.guestPhone && <PhoneLink phone={r.guestPhone} className="text-stone-500" showIcon={false} />}
                 </td>
                 <td className="px-4 py-4">{r.roomName}</td>
                 <td className="whitespace-nowrap px-4 py-4 text-stone-600 dark:text-stone-400">

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Search } from "lucide-react";
 import { StatusEditor } from "@/components/admin/status-editor";
+import { PhoneLink } from "@/components/shared/phone-link";
 import { formatDate } from "@/lib/utils";
 import type { ContactSubmission } from "@prisma/client";
 
@@ -79,7 +80,7 @@ export function ContactsTable({ submissions }: { submissions: ContactSubmission[
                 <td className="px-4 py-4 font-medium">{s.name}</td>
                 <td className="px-4 py-4">
                   <p>{s.email}</p>
-                  {s.phone && <p className="text-stone-500">{s.phone}</p>}
+                  {s.phone && <PhoneLink phone={s.phone} className="text-stone-500" showIcon={false} />}
                 </td>
                 <td className="px-4 py-4">{s.subject}</td>
                 <td className="max-w-xs px-4 py-4 text-stone-600 dark:text-stone-400">{s.message}</td>
