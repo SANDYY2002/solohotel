@@ -75,14 +75,12 @@ export function ContactForm() {
 
     setStatus("sending");
     try {
-      // Replace with a real endpoint, e.g.:
-      // const res = await fetch("/api/contact", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(form),
-      // });
-      // if (!res.ok) throw new Error();
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error();
       setStatus("sent");
     } catch {
       setStatus("idle");
