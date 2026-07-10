@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getSiteContent, updateSiteContentSection } from "@/lib/content-store";
 import { CONTENT_SECTIONS, type ContentSection } from "@/lib/content-types";
-import { logActivity } from "@/lib/activity-log";
 
 export async function GET(req: Request) {
   if (!(await requireAdmin(req))) {
@@ -37,11 +36,5 @@ export async function PUT(req: Request) {
   }
 
   const updated = await updateSiteContentSection(section as ContentSection, data as never);
-  await logActivity({
-    action: "content_saved",
-    entity: "content",
-    entityId: section,
-    summary: `Saved changes to "${section}" content`,
-  });
   return NextResponse.json(updated);
 }

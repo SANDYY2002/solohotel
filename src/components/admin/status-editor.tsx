@@ -2,15 +2,15 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/components/admin/toast-provider";
 
 /**
  * Status dropdown + explicit Save button, used for both contact messages
- * and reservations. Nothing is written until Save is clicked — the button
- * only appears once the selection differs from what's saved, and feedback
- * goes through the shared toast system.
+ * and reservations. Unlike the old auto-save-on-change behavior, nothing
+ * is written until Save is clicked — the button stays disabled until the
+ * selection actually differs from what's saved, and shows a brief
+ * confirmation (or error) after saving.
  */
 export function StatusEditor({
   id,
@@ -24,15 +24,14 @@ export function StatusEditor({
   endpoint: string;
 }) {
   const router = useRouter();
-  const showToast = useToast();
   const [value, setValue] = React.useState(status);
   const [saved, setSaved] = React.useState(status);
-  const [saving, setSaving] = React.useState(false);
+  const [state, setState] = React.useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const dirty = value !== saved;
 
   async function handleSave() {
-    setSaving(true);
+    setState("saving");
     try {
       const res = await fetch(`${endpoint}/${id}`, {
         method: "PATCH",
@@ -41,12 +40,11 @@ export function StatusEditor({
       });
       if (!res.ok) throw new Error();
       setSaved(value);
-      showToast("success", `Status updated to ${value}.`);
+      setState("saved");
       router.refresh();
+      setTimeout(() => setState((s) => (s === "saved" ? "idle" : s)), 2000);
     } catch {
-      showToast("error", "Couldn't update status — try again.");
-    } finally {
-      setSaving(false);
+      setState("error");
     }
   }
 
@@ -54,12 +52,14 @@ export function StatusEditor({
     <div className="flex items-center gap-2">
       <select
         value={value}
-        disabled={saving}
-        onChange={(e) => setValue(e.target.value)}
-        onClick={(e) => e.stopPropagation()}
+        disabled={state === "saving"}
+        onChange={(e) => {
+          setValue(e.target.value);
+          setState("idle");
+        }}
         className={cn(
           "rounded-full border border-stone-300 bg-transparent px-3 py-1 text-xs font-mono uppercase tracking-wide dark:border-stone-700",
-          saving && "opacity-50"
+          state === "saving" && "opacity-50"
         )}
       >
         {options.map((o) => (
@@ -69,19 +69,26 @@ export function StatusEditor({
         ))}
       </select>
 
-      {dirty && (
+      {dirty && state !== "saved" && (
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSave();
-          }}
-          disabled={saving}
+          onClick={handleSave}
+          disabled={state === "saving"}
           className="flex items-center gap-1 rounded-full bg-bronze-400 px-2.5 py-1 text-xs font-medium text-ink transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {saving && <Loader2 className="h-3 w-3 animate-spin" />}
-          {saving ? "Saving…" : "Save"}
+          {state === "saving" && <Loader2 className="h-3 w-3 animate-spin" />}
+          {state === "saving" ? "Saving…" : "Save"}
         </button>
+      )}
+      {state === "saved" && (
+        <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+          <Check className="h-3.5 w-3.5" /> Saved
+        </span>
+      )}
+      {state === "error" && (
+        <span className="flex items-center gap-1 text-xs text-red-500">
+          <AlertCircle className="h-3.5 w-3.5" /> Failed — retry
+        </span>
       )}
     </div>
   );

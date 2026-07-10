@@ -33,9 +33,7 @@ model ContactSubmission {
   subject   String
   message   String        @db.Text
   status    ContactStatus @default(NEW)
-  notes     String?       @db.Text
   createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
 
   @@index([status])
   @@index([createdAt])
@@ -56,29 +54,11 @@ model Reservation {
   guestPhone        String?
   specialRequests   String?            @db.Text
   status            ReservationStatus  @default(HELD)
-  notes             String?            @db.Text
   createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
 
   @@index([status])
   @@index([createdAt])
   @@index([guestEmail])
-}
-
-// Lightweight audit trail for admin actions (status changes, deletions,
-// content saves). There's a single shared admin password rather than
-// per-user accounts, so "who" is always "Staff" — this still gives a
-// record of *what* changed and *when*, which is most of the value.
-model AdminActivityLog {
-  id        String   @id @default(cuid())
-  action    String
-  entity    String
-  entityId  String?
-  summary   String   @db.Text
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-  @@index([entity])
 }
 
 // Single-row store for every admin-editable piece of site copy (settings,
