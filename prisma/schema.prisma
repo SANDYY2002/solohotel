@@ -35,7 +35,7 @@ model ContactSubmission {
   status    ContactStatus @default(NEW)
   notes     String?       @db.Text
   createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  updatedAt DateTime      @default(now()) @updatedAt
 
   @@index([status])
   @@index([createdAt])
@@ -58,7 +58,7 @@ model Reservation {
   status            ReservationStatus  @default(HELD)
   notes             String?            @db.Text
   createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  updatedAt         DateTime           @default(now()) @updatedAt
 
   @@index([status])
   @@index([createdAt])
@@ -88,5 +88,5 @@ model AdminActivityLog {
 model SiteContent {
   key       String   @id @default("site-content")
   data      Json
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 }
