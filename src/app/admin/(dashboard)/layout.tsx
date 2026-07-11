@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate, BarChart3, History } from "lucide-react";
+import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate, BarChart3, History, Send } from "lucide-react";
 import { getSiteContent } from "@/lib/content-store";
 import { AdminLogoutButton } from "@/components/admin/logout-button";
 import { ToastProvider } from "@/components/admin/toast-provider";
@@ -30,6 +30,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </Link>
             <Link href="/admin/reservations" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
               <CalendarCheck className="h-4 w-4" /> Reservations
+            </Link>
+            <Link href="/admin/newsletter" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
+              <Send className="h-4 w-4" /> Newsletter
             </Link>
             <Link href="/admin/activity" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
               <History className="h-4 w-4" /> Activity Log

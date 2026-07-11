@@ -4,7 +4,7 @@ import { getSiteContent } from "@/lib/content-store";
 import { nightsBetween } from "@/lib/utils";
 
 function generateConfirmationCode() {
-  return `SLT-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+  return `YKN-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 }
 
 export async function POST(req: Request) {
@@ -37,6 +37,24 @@ export async function POST(req: Request) {
   }
   if (typeof checkIn !== "string" || typeof checkOut !== "string" || new Date(checkOut) <= new Date(checkIn)) {
     return NextResponse.json({ error: "Check-out must be after check-in." }, { status: 400 });
+  }
+
+  // Prevent double-booking: reject if any non-cancelled reservation for this
+  // room has overlapping dates. checkIn/checkOut are stored as "YYYY-MM-DD"
+  // strings, so lexicographic comparison is equivalent to date comparison.
+  const overlapping = await prisma.reservation.findFirst({
+    where: {
+      roomSlug: room.slug,
+      status: { not: "CANCELLED" },
+      checkIn: { lt: checkOut },
+      checkOut: { gt: checkIn },
+    },
+  });
+  if (overlapping) {
+    return NextResponse.json(
+      { error: "This room is already booked for part of that date range. Please choose different dates." },
+      { status: 409 }
+    );
   }
   if (typeof guestName !== "string" || !guestName.trim()) {
     return NextResponse.json({ error: "Guest name is required." }, { status: 400 });

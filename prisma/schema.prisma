@@ -85,6 +85,14 @@ model AdminActivityLog {
 // rooms, dining, spa, gallery, testimonials, FAQs, about). Kept as one JSON
 // blob rather than fully normalized tables since it's just structured text
 // and image URLs, not relational data — see src/lib/content-store.ts.
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model SiteContent {
   key       String   @id @default("site-content")
   data      Json

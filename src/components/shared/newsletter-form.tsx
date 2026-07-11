@@ -7,18 +7,34 @@ import { cn } from "@/lib/utils";
 
 export function NewsletterForm({ dark = false }: { dark?: boolean }) {
   const [email, setEmail] = React.useState("");
-  const [status, setStatus] = React.useState<"idle" | "submitted">("idle");
+  const [status, setStatus] = React.useState<"idle" | "submitting" | "submitted">("idle");
   const [error, setError] = React.useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Enter a valid email address.");
       return;
     }
     setError(null);
-    // In production: POST to /api/newsletter
-    setStatus("submitted");
+    setStatus("submitting");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Something went wrong. Please try again.");
+        setStatus("idle");
+        return;
+      }
+      setStatus("submitted");
+    } catch {
+      setError("Could not reach the server. Please try again.");
+      setStatus("idle");
+    }
   }
 
   if (status === "submitted") {
@@ -45,7 +61,8 @@ export function NewsletterForm({ dark = false }: { dark?: boolean }) {
         <button
           type="submit"
           aria-label="Subscribe"
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-sm bg-bronze-400 text-ink transition-colors hover:bg-bronze-300"
+          disabled={status === "submitting"}
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-sm bg-bronze-400 text-ink transition-colors hover:bg-bronze-300 disabled:opacity-60"
         >
           <ArrowRight className="h-4 w-4" />
         </button>
