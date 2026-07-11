@@ -40,6 +40,7 @@ export function ArrayEditor({
   addLabel?: string;
 }) {
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = React.useState<number | null>(null);
 
   function updateItem(index: number, key: string, value: unknown) {
     const next = items.slice();
@@ -47,9 +48,15 @@ export function ArrayEditor({
     onChange(next);
   }
 
-  function removeItem(index: number) {
-    onChange(items.filter((_, i) => i !== index));
-    setOpenIndex(null);
+  function requestRemove(index: number) {
+    if (pendingDelete === index) {
+      onChange(items.filter((_, i) => i !== index));
+      setOpenIndex(null);
+      setPendingDelete(null);
+    } else {
+      setPendingDelete(index);
+      setTimeout(() => setPendingDelete((p) => (p === index ? null : p)), 3000);
+    }
   }
 
   function addItem() {
@@ -107,11 +114,15 @@ export function ArrayEditor({
               </button>
               <button
                 type="button"
-                onClick={() => removeItem(index)}
-                className="rounded-sm p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
-                aria-label={`Delete ${title}`}
+                onClick={() => requestRemove(index)}
+                className={
+                  pendingDelete === index
+                    ? "rounded-sm bg-red-500 px-2 py-1.5 text-xs font-medium text-white"
+                    : "rounded-sm p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+                }
+                aria-label={pendingDelete === index ? `Confirm delete ${title}` : `Delete ${title}`}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                {pendingDelete === index ? "Confirm?" : <Trash2 className="h-3.5 w-3.5" />}
               </button>
             </div>
 
