@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Settings, Home, BedDouble, UtensilsCrossed, Flower2, Image as ImageIcon, Quote, HelpCircle, Users, ArrowRight } from "lucide-react";
+import { ContentBackupCard } from "@/components/admin/content-backup-card";
 
 const SECTIONS = [
   { href: "/admin/content/settings", icon: Settings, title: "Site Settings", desc: "Name, tagline, contact info, social links, nav menu." },
@@ -39,6 +40,8 @@ export default function AdminContentHub() {
           </Link>
         ))}
       </div>
+
+      <ContentBackupCard />
     </div>
   );
 }

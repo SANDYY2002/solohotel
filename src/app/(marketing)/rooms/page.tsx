@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Rooms & Suites",
-  description: "Garden Rooms, Cliffside View Rooms, the Belvedere Suite, and the Grotto Villa — four ways to stay at Solterra Cliff House.",
+  description: "Garden Rooms, Cliffside View Rooms, the Belvedere Suite, and the Grotto Villa — four ways to stay at Yukin Cliff House.",
 };
 
 export default function RoomsPage() {

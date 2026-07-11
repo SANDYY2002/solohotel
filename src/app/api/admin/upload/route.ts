@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   }
 
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-  const key = `solterra/${Date.now()}-${safeName}`;
+  const key = `yukin/${Date.now()}-${safeName}`;
 
   try {
     const blob = await put(key, file, { access: "public" });

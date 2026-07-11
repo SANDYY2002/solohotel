@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "The story of Solterra Cliff House — a family property carved into the Amalfi coastline, its people, its awards, and its approach to sustainability.",
+  description: "The story of Yukin Cliff House — a family property carved into the Amalfi coastline, its people, its awards, and its approach to sustainability.",
 };
 
 export default async function AboutPage() {
@@ -24,7 +24,7 @@ export default async function AboutPage() {
       <PageHeader
         eyebrow="About"
         title="Built into the cliff, not on top of it"
-        description="Solterra began as a single fisherman's house on this rock face in 1961. Three generations later, it's still a family that runs it."
+        description="Yukin began as a single fisherman's house on this rock face in 1961. Three generations later, it's still a family that runs it."
         image="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop"
       />
 
@@ -43,7 +43,7 @@ export default async function AboutPage() {
           <Reveal delay={0.1} className="relative aspect-[4/5] overflow-hidden rounded-sm">
             <Image
               src="https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?q=80&w=1600&auto=format&fit=crop"
-              alt="Solterra Cliff House terraces"
+              alt="Yukin Cliff House terraces"
               fill
               loading="lazy"
               className="object-cover"

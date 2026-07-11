@@ -5,15 +5,15 @@ import type { SiteContent } from "@/lib/content-types";
 
 export const DEFAULT_CONTENT: SiteContent = {
   siteConfig: {
-    name: "SOLTERRA",
-    fullName: "Solterra Cliff House",
+    name: "YUKIN",
+    fullName: "Yukin Cliff House",
     tagline: "A conservatory above the sea",
     description:
-      "Solterra Cliff House is a 42-suite five-star retreat set into the botanical cliffs above the Amalfi coastline — glasshouse dining, a stone-carved spa, and rooms built around the view.",
+      "Yukin Cliff House is a 42-suite five-star retreat set into the botanical cliffs above the Amalfi coastline — glasshouse dining, a stone-carved spa, and rooms built around the view.",
     location: "Path of the Gods, Praiano, Amalfi Coast, Italy",
     phone: "+39 089 555 0142",
     whatsapp: "+39 089 555 0142",
-    email: "reservations@solterracliffhouse.com",
+    email: "reservations@yukincliffhouse.com",
     coordinates: { lat: 40.6157, lng: 14.4756 },
     social: {
       instagram: "https://instagram.com",
@@ -242,7 +242,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     {
       name: "Margaux L.",
       origin: "Paris, France",
-      quote: "Every window at Solterra is composed like a painting. The staff remembered our anniversary without being told twice.",
+      quote: "Every window at Yukin is composed like a painting. The staff remembered our anniversary without being told twice.",
       rating: 5,
     },
     {
@@ -271,7 +271,7 @@ export const DEFAULT_CONTENT: SiteContent = {
       a: "Check-in is from 3:00 PM and check-out is by 11:00 AM. Early arrival and late departure can be arranged in advance, subject to availability.",
     },
     {
-      q: "Is Solterra suitable for children?",
+      q: "Is Yukin suitable for children?",
       a: "We welcome guests of all ages in our Garden Rooms, Suites and Villas. Cliffside View Rooms are recommended for guests 12 and older, given the open-tub layout.",
     },
     {
@@ -296,7 +296,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     storyHeading: "Three generations on one rock face",
     storyParagraphs: [
       "In 1961, Salvatore Greco converted his family's fishing house on the Path of the Gods into six rooms for the first travelers making their way down the coast on foot. His daughter added the glasshouse restaurant in 1988. Her son, Marco, now runs the property with the same instruction his grandfather gave him: never let a room compete with the view.",
-      "Today Solterra holds 42 rooms, suites, and one villa, three restaurants, and a spa carved directly into the basalt — but the terraces, the citrus grove, and the original stone stairs to the water are unchanged.",
+      "Today Yukin holds 42 rooms, suites, and one villa, three restaurants, and a spa carved directly into the basalt — but the terraces, the citrus grove, and the original stone stairs to the water are unchanged.",
     ],
     sustainability: [
       { icon: "Sun", title: "Solar-Assisted Power", desc: "Rooftop solar covers roughly 40% of the property's energy load." },

@@ -20,7 +20,7 @@ export function Hero() {
     <section className="relative flex min-h-[100vh] w-full flex-col justify-end">
       <Image
         src={home.heroImage}
-        alt={`Solterra Cliff House at golden hour, overlooking ${siteConfig.location}`}
+        alt={`Yukin Cliff House at golden hour, overlooking ${siteConfig.location}`}
         fill
         priority
         className="object-cover"

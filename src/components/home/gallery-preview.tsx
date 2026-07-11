@@ -35,7 +35,7 @@ export async function GalleryPreview() {
             >
               <Image
                 src={img.src}
-                alt={img.alt || "Photo from Solterra Cliff House"}
+                alt={img.alt || "Photo from Yukin Cliff House"}
                 fill
                 loading="lazy"
                 sizes="(max-width: 768px) 50vw, 20vw"

@@ -12,7 +12,7 @@
  * accounts, roles, or audit logging.
  */
 
-export const SESSION_COOKIE = "solterra_admin_session";
+export const SESSION_COOKIE = "yukin_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 8; // 8 hours
 
 function getSecret(): string {

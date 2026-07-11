@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   }
 
   const nights = nightsBetween(checkIn, checkOut);
-  const promo = typeof promoCode === "string" && promoCode.trim().toUpperCase() === "SOLTERRA10" ? 0.1 : 0;
+  const promo = typeof promoCode === "string" && promoCode.trim().toUpperCase() === "YUKIN10" ? 0.1 : 0;
   const totalPriceUsd = Math.round(room.pricePerNight * nights * (1 - promo));
 
   let confirmationCode = generateConfirmationCode();

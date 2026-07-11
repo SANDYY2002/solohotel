@@ -283,9 +283,7 @@ export function ReservationsTable({ reservations }: { reservations: Reservation[
                   <p className="font-medium">{r.guestName}</p>
                   <p className="text-stone-500">{r.guestEmail}</p>
                   {r.guestPhone && (
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <PhoneLink phone={r.guestPhone} className="text-stone-500" showIcon={false} />
-                    </div>
+                    <PhoneLink phone={r.guestPhone} className="text-stone-500" showIcon={false} />
                   )}
                 </td>
                 <td className="px-4 py-4">{r.roomName}</td>

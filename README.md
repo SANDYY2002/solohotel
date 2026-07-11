@@ -1,4 +1,4 @@
-# SOLTERRA — Solterra Cliff House
+# YUKIN — Yukin Cliff House
 
 A production-grade marketing + booking website for a fictional 5-star cliffside hotel on the Amalfi Coast, built as a complete Next.js App Router project.
 
@@ -97,7 +97,7 @@ src/
 
 `src/components/booking/booking-widget.tsx` implements the full flow against the dummy room data in `src/data/rooms.ts`, backed by a real database:
 
-1. **Search** — check-in/check-out dates (with validation), guest count, room type, promo code (`SOLTERRA10` applies a 10% demo discount)
+1. **Search** — check-in/check-out dates (with validation), guest count, room type, promo code (`YUKIN10` applies a 10% demo discount)
 2. **Results** — filtered, priced availability with a simulated network delay
 3. **Guest details** — name, email, phone, special requests
 4. **Confirmation** — `POST /api/reservations` validates the request, computes the total server-side, generates a confirmation code, and saves it — visible immediately at `/admin/reservations`
@@ -113,10 +113,10 @@ Both the contact form and the booking widget write to a real **MySQL** database,
 Any MySQL 8+ instance works. Easiest local option, via Docker:
 
 ```bash
-docker run --name solterra-mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=solterra -p 3306:3306 -v solterra-mysql-data:/var/lib/mysql -d mysql:8
+docker run --name yukin-mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=yukin -p 3306:3306 -v yukin-mysql-data:/var/lib/mysql -d mysql:8
 ```
 
-> **Note:** the `-v solterra-mysql-data:/var/lib/mysql` flag stores the database in a named Docker volume, not inside the container itself. Without it, removing and recreating the container (e.g. `docker rm` + `docker run` again) wipes everything — reservations, contact messages, and all site content edited in `/admin/content`. Stopping/starting the same container (`docker stop` / `docker start`) is safe either way; it's only removal + recreation that loses data.
+> **Note:** the `-v yukin-mysql-data:/var/lib/mysql` flag stores the database in a named Docker volume, not inside the container itself. Without it, removing and recreating the container (e.g. `docker rm` + `docker run` again) wipes everything — reservations, contact messages, and all site content edited in `/admin/content`. Stopping/starting the same container (`docker stop` / `docker start`) is safe either way; it's only removal + recreation that loses data.
 
 Or use a managed instance for zero local setup. **[TiDB Cloud Starter](https://tidbcloud.com)** is the one worth using if you want it free: it speaks the MySQL wire protocol (so nothing about this project changes — same `provider = "mysql"` in `prisma/schema.prisma`, same queries), and its free tier is permanent, not a trial — 5GB storage, 50M requests/month, no credit card required. (PlanetScale, once the default answer here, removed its free tier in 2024 and now starts at $5–39/month — TiDB is the closest still-free MySQL-compatible replacement.) Railway and AWS RDS also work with the same `DATABASE_URL` approach, but their free allowances are either small or time-limited.
 
@@ -125,7 +125,7 @@ Or use a managed instance for zero local setup. **[TiDB Cloud Starter](https://t
 2. From the cluster's **Connect** panel, copy the host, port, and your generated username — TiDB prefixes it per-cluster, e.g. `xxxxxxxx.root`, not just `root`.
 3. Build your `DATABASE_URL` (TiDB requires TLS):
    ```
-   DATABASE_URL="mysql://<prefix>.root:<password>@gateway01.<region>.prod.aws.tidbcloud.com:4000/solterra?sslaccept=strict"
+   DATABASE_URL="mysql://<prefix>.root:<password>@gateway01.<region>.prod.aws.tidbcloud.com:4000/yukin?sslaccept=strict"
    ```
 4. Continue with steps 2–3 below as normal (`prisma generate`, `prisma db push`) — no schema or code changes needed.
 
@@ -138,7 +138,7 @@ cp .env.example .env
 Edit `.env`:
 
 ```
-DATABASE_URL="mysql://root:password@localhost:3306/solterra"
+DATABASE_URL="mysql://root:password@localhost:3306/yukin"
 ADMIN_PASSWORD="choose-a-real-password"
 ADMIN_SESSION_SECRET="$(openssl rand -hex 32)"   # or any long random string
 ```

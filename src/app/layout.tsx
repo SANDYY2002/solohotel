@@ -4,9 +4,6 @@ import "./globals.css";
 import { getSiteContent } from "@/lib/content-store";
 import { SiteContentProvider } from "@/lib/site-content-context";
 import { ThemeProvider } from "@/components/shared/theme-provider";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
-import { LiveChat } from "@/components/shared/live-chat";
 
 // Every page reads live content from the database via getSiteContent().
 // Without this, Next.js would try to pre-render pages as static HTML at
@@ -50,7 +47,7 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   const { siteConfig } = await getSiteContent();
   return {
-    metadataBase: new URL("https://www.solterracliffhouse.com"),
+    metadataBase: new URL("https://www.yukincliffhouse.com"),
     title: {
       default: `${siteConfig.name} — Five-Star Cliffside Retreat, Amalfi Coast`,
       template: `%s — ${siteConfig.name}`,
@@ -60,7 +57,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: `${siteConfig.name} — ${siteConfig.tagline}`,
       description: siteConfig.description,
-      url: "https://www.solterracliffhouse.com",
+      url: "https://www.yukincliffhouse.com",
       siteName: siteConfig.name,
       images: [{ url: "https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?q=80&w=1600&auto=format&fit=crop", width: 1600, height: 900 }],
       locale: "en_US",
@@ -91,10 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             >
               Skip to content
             </a>
-            <Navbar />
-            <main id="main-content">{children}</main>
-            <Footer />
-            <LiveChat />
+            {children}
           </ThemeProvider>
         </SiteContentProvider>
       </body>

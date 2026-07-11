@@ -54,3 +54,13 @@ export async function updateSiteContentSection<K extends ContentSection>(
 
   return next;
 }
+
+/** Replaces the entire content object at once — used for restoring from a backup file. */
+export async function replaceSiteContent(content: SiteContent): Promise<SiteContent> {
+  await prisma.siteContent.upsert({
+    where: { key: SINGLETON_KEY },
+    update: { data: content as object },
+    create: { key: SINGLETON_KEY, data: content as object },
+  });
+  return content;
+}

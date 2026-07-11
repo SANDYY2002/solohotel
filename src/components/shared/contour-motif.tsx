@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * A single-line topographic/leaf contour, drawn on scroll into view.
- * This is SOLTERRA's signature element: it stands in for the site's
+ * This is YUKIN's signature element: it stands in for the site's
  * generic hairline dividers everywhere a section break is needed, and
  * echoes the terraced cliff-garden the hotel is built into.
  */

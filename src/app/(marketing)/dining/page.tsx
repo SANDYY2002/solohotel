@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Dining",
-  description: "Il Vetro, La Terrazza, and The Grotto Bar — three dining venues at Solterra Cliff House, led by Executive Chef Elena Moretti.",
+  description: "Il Vetro, La Terrazza, and The Grotto Bar — three dining venues at Yukin Cliff House, led by Executive Chef Elena Moretti.",
 };
 
 export default async function DiningPage() {

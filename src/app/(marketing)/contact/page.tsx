@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Reach the Solterra Cliff House concierge team by phone, email, or message — or find us on the Path of the Gods.",
+  description: "Reach the Yukin Cliff House concierge team by phone, email, or message — or find us on the Path of the Gods.",
 };
 
 export default async function ContactPage() {

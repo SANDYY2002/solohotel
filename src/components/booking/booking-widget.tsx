@@ -38,7 +38,7 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
   const nights = nightsBetween(checkIn, checkOut);
-  const promoDiscount = promo.trim().toUpperCase() === "SOLTERRA10" ? 0.1 : 0;
+  const promoDiscount = promo.trim().toUpperCase() === "YUKIN10" ? 0.1 : 0;
 
   const matches = React.useMemo(
     () => rooms.filter((r) => (roomType === "Any" ? true : r.category === roomType) && Number(guests) <= r.maxGuests),

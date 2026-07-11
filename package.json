@@ -1,8 +1,8 @@
 {
-  "name": "solterra-hotel",
+  "name": "yukin-hotel",
   "version": "1.0.0",
   "private": true,
-  "description": "SOLTERRA — a five-star cliffside retreat. Marketing & booking website.",
+  "description": "YUKIN — a five-star cliffside retreat. Marketing & booking website.",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",

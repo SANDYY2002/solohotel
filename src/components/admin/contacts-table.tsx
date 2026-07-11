@@ -267,9 +267,7 @@ export function ContactsTable({ submissions }: { submissions: ContactSubmission[
                 <td className="px-4 py-4">
                   <p>{s.email}</p>
                   {s.phone && (
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <PhoneLink phone={s.phone} className="text-stone-500" showIcon={false} />
-                    </div>
+                    <PhoneLink phone={s.phone} className="text-stone-500" showIcon={false} />
                   )}
                 </td>
                 <td className="px-4 py-4">{s.subject}</td>

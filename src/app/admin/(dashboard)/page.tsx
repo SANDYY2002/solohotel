@@ -1,10 +1,17 @@
 import Link from "next/link";
-import { Mail, CalendarCheck, Inbox, CheckCircle2, XCircle, Clock, MessageSquareReply, MailOpen } from "lucide-react";
+import { Mail, CalendarCheck, Inbox, CheckCircle2, XCircle, Clock, MessageSquareReply, MailOpen, LogIn, LogOut } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { PhoneLink } from "@/components/shared/phone-link";
 
 export const dynamic = "force-dynamic";
 
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export default async function AdminOverviewPage() {
+  const today = todayIso();
+
   const [
     newContacts,
     readContacts,
@@ -14,6 +21,8 @@ export default async function AdminOverviewPage() {
     confirmedReservations,
     cancelledReservations,
     totalReservations,
+    arrivingToday,
+    departingToday,
   ] = await Promise.all([
     prisma.contactSubmission.count({ where: { status: "NEW" } }),
     prisma.contactSubmission.count({ where: { status: "READ" } }),
@@ -23,6 +32,8 @@ export default async function AdminOverviewPage() {
     prisma.reservation.count({ where: { status: "CONFIRMED" } }),
     prisma.reservation.count({ where: { status: "CANCELLED" } }),
     prisma.reservation.count(),
+    prisma.reservation.findMany({ where: { checkIn: today, status: { not: "CANCELLED" } }, orderBy: { guestName: "asc" } }),
+    prisma.reservation.findMany({ where: { checkOut: today, status: { not: "CANCELLED" } }, orderBy: { guestName: "asc" } }),
   ]);
 
   const stats = [
@@ -48,6 +59,56 @@ export default async function AdminOverviewPage() {
     <div>
       <h1 className="font-display text-3xl">Overview</h1>
       <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">A snapshot of what needs attention.</p>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <div className="rounded-sm border border-stone-200 p-5 dark:border-stone-800">
+          <h2 className="flex items-center gap-2 font-display text-lg">
+            <LogIn className="h-4 w-4 text-bronze-400" /> Arriving today ({arrivingToday.length})
+          </h2>
+          <div className="mt-3 space-y-3">
+            {arrivingToday.map((r) => (
+              <Link
+                key={r.id}
+                href="/admin/reservations"
+                className="flex items-center justify-between rounded-sm border border-stone-100 px-3 py-2 text-sm hover:border-bronze-400 dark:border-stone-800"
+              >
+                <div>
+                  <p className="font-medium">{r.guestName}</p>
+                  <p className="text-xs text-stone-500">{r.roomName}</p>
+                </div>
+                {r.guestPhone && (
+                  <PhoneLink phone={r.guestPhone} showIcon={false} className="text-xs text-stone-500" align="right" />
+                )}
+              </Link>
+            ))}
+            {arrivingToday.length === 0 && <p className="py-4 text-center text-sm text-stone-400">No arrivals today.</p>}
+          </div>
+        </div>
+
+        <div className="rounded-sm border border-stone-200 p-5 dark:border-stone-800">
+          <h2 className="flex items-center gap-2 font-display text-lg">
+            <LogOut className="h-4 w-4 text-bronze-400" /> Departing today ({departingToday.length})
+          </h2>
+          <div className="mt-3 space-y-3">
+            {departingToday.map((r) => (
+              <Link
+                key={r.id}
+                href="/admin/reservations"
+                className="flex items-center justify-between rounded-sm border border-stone-100 px-3 py-2 text-sm hover:border-bronze-400 dark:border-stone-800"
+              >
+                <div>
+                  <p className="font-medium">{r.guestName}</p>
+                  <p className="text-xs text-stone-500">{r.roomName}</p>
+                </div>
+                {r.guestPhone && (
+                  <PhoneLink phone={r.guestPhone} showIcon={false} className="text-xs text-stone-500" align="right" />
+                )}
+              </Link>
+            ))}
+            {departingToday.length === 0 && <p className="py-4 text-center text-sm text-stone-400">No departures today.</p>}
+          </div>
+        </div>
+      </div>
 
       <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => {

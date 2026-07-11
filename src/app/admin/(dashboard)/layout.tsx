@@ -39,7 +39,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <AdminLogoutButton />
           </div>
         </aside>
-        <main className="flex-1 p-6 md:p-10">{children}</main>
+        <main id="main-content" className="flex-1 p-6 md:p-10">{children}</main>
       </div>
     </ToastProvider>
   );

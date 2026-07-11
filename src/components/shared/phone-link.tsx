@@ -53,7 +53,10 @@ export function PhoneLink({
     <div className="relative inline-block" ref={containerRef}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
         className={cn("inline-flex items-center gap-2 text-left", className)}
         aria-haspopup="menu"
         aria-expanded={open}

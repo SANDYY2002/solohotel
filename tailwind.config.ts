@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * SOLTERRA design tokens.
+ * YUKIN design tokens.
  *
  * Palette is deliberately botanical/mineral, not the generic cream+terracotta
  * "AI luxury" default: deep conservatory greens, a weathered bronze accent,

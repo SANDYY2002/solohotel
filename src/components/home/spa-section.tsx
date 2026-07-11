@@ -15,7 +15,7 @@ export async function SpaSection() {
         <Reveal className="relative aspect-[4/5] overflow-hidden rounded-sm">
           <Image
             src={SPA_IMAGE}
-            alt="Basalt thermal pool at the Solterra spa"
+            alt="Basalt thermal pool at the Yukin spa"
             fill
             loading="lazy"
             className="object-cover"

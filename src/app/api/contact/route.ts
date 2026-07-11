@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   });
 
   // In production: also notify staff, e.g.
-  //   await sendEmail({ to: "reservations@solterracliffhouse.com", ... })
+  //   await sendEmail({ to: "reservations@yukincliffhouse.com", ... })
 
   return NextResponse.json({ id: submission.id }, { status: 201 });
 }
