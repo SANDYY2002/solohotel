@@ -60,7 +60,7 @@ export async function sendReservationConfirmation(params: {
             <tr><td style="padding: 6px 0; color: #6b6560;">Guests</td><td style="padding: 6px 0; text-align: right;">${params.guests}</td></tr>
             <tr><td style="padding: 6px 0; color: #6b6560;">Total</td><td style="padding: 6px 0; text-align: right;"><strong>$${params.totalPriceUsd.toLocaleString()}</strong></td></tr>
           </table>
-          <p>Questions? Reply to this email or call ${params.hotelPhone}.</p>
+          <p>Questions, need to make a change, or want to cancel? Reply to this email, call ${params.hotelPhone}, or visit the "Manage Your Booking" link on our website with this confirmation code.</p>
           <p style="margin-top: 24px; color: #6b6560; font-size: 13px;">— The ${params.hotelName} team</p>
         </div>
       `,
@@ -74,6 +74,47 @@ export async function sendReservationConfirmation(params: {
     // Never let an email failure break the booking itself — it already
     // succeeded and was saved before this is called.
     console.error("[email] Failed to send guest confirmation:", err);
+    return { sent: false, error: err instanceof Error ? err.message : "Unknown error." };
+  }
+}
+
+export async function sendCancellationConfirmation(params: {
+  guestEmail: string;
+  guestName: string;
+  confirmationCode: string;
+  roomName: string;
+  hotelName: string;
+  hotelEmail: string;
+  hotelPhone: string;
+}): Promise<{ sent: boolean; error?: string }> {
+  const client = getClient();
+  if (!client) {
+    console.log(`[email] Skipped cancellation confirmation for ${params.guestEmail} — RESEND_API_KEY not set.`);
+    return { sent: false, error: "RESEND_API_KEY not set" };
+  }
+
+  try {
+    const result = await client.emails.send({
+      from: `${params.hotelName} <${fromAddress()}>`,
+      to: params.guestEmail,
+      subject: `Your reservation has been cancelled — ${params.confirmationCode}`,
+      html: `
+        <div style="font-family: Georgia, serif; max-width: 480px; margin: 0 auto; color: #2f2a26;">
+          <h1 style="font-size: 20px; letter-spacing: 0.05em; text-transform: uppercase;">${params.hotelName}</h1>
+          <p>Dear ${params.guestName},</p>
+          <p>This confirms that your reservation <strong>${params.confirmationCode}</strong> for the ${params.roomName} has been cancelled at your request. No further action is needed.</p>
+          <p>Changed your mind, or booked in error? Reply to this email or call ${params.hotelPhone} and we'll be glad to help.</p>
+          <p style="margin-top: 24px; color: #6b6560; font-size: 13px;">— The ${params.hotelName} team</p>
+        </div>
+      `,
+    });
+    if (result.error) {
+      console.error("[email] Resend returned an error for cancellation confirmation:", result.error);
+      return { sent: false, error: result.error.message };
+    }
+    return { sent: true };
+  } catch (err) {
+    console.error("[email] Failed to send cancellation confirmation:", err);
     return { sent: false, error: err instanceof Error ? err.message : "Unknown error." };
   }
 }

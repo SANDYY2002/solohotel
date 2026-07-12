@@ -37,6 +37,11 @@ export async function Footer() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/manage-booking" className="text-stone-400 transition-colors hover:text-stone-50">
+                Manage Your Booking
+              </Link>
+            </li>
           </ul>
         </div>
 
