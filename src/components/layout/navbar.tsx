@@ -55,7 +55,16 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-4 lg:flex">
+          <Link
+            href="/manage-booking"
+            className={cn(
+              "text-sm font-medium transition-colors hover:text-bronze-400",
+              pathname === "/manage-booking" ? "text-bronze-400" : scrolled ? "text-stone-700 dark:text-stone-200" : "text-stone-50"
+            )}
+          >
+            Manage Booking
+          </Link>
           <ThemeToggle className={cn(!scrolled && "text-stone-50 border-white/30")} />
           <Button variant="bronze" size="sm" onClick={() => document.getElementById("booking-widget")?.scrollIntoView({ behavior: "smooth" })}>
             {siteConfig.bookingCta}
@@ -92,9 +101,21 @@ export function Navbar() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link href="/manage-booking" className="block py-3 text-base font-medium text-stone-800 dark:text-stone-100">
+                  Manage Booking
+                </Link>
+              </li>
               <li className="flex items-center justify-between pt-3">
                 <ThemeToggle />
-                <Button variant="bronze" size="sm">
+                <Button
+                  variant="bronze"
+                  size="sm"
+                  onClick={() => {
+                    setOpen(false);
+                    document.getElementById("booking-widget")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
                   {siteConfig.bookingCta}
                 </Button>
               </li>
