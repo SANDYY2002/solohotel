@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content-store";
+import { sendStaffNotification } from "@/lib/email";
+import { logActivity } from "@/lib/activity-log";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -31,8 +34,21 @@ export async function POST(req: Request) {
     },
   });
 
-  // In production: also notify staff, e.g.
-  //   await sendEmail({ to: "reservations@yukincliffhouse.com", ... })
+  const { siteConfig } = await getSiteContent();
+  const staffEmailResult = await sendStaffNotification({
+    hotelEmail: siteConfig.email,
+    subject: `New message: ${submission.subject}`,
+    text: `${submission.name} (${submission.email}${submission.phone ? `, ${submission.phone}` : ""}) wrote:\n\n${submission.message}`,
+  });
+
+  if (!staffEmailResult.sent) {
+    await logActivity({
+      action: "email_failed",
+      entity: "contact",
+      entityId: submission.id,
+      summary: `Staff notification for message from ${submission.name} did not send: ${staffEmailResult.error}`,
+    });
+  }
 
   return NextResponse.json({ id: submission.id }, { status: 201 });
 }

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSiteContent } from "@/lib/content-store";
 import { nightsBetween } from "@/lib/utils";
+import { sendReservationConfirmation, sendStaffNotification } from "@/lib/email";
+import { logActivity } from "@/lib/activity-log";
 
 function generateConfirmationCode() {
   return `YKN-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
@@ -27,7 +29,7 @@ export async function POST(req: Request) {
     specialRequests,
   } = (body ?? {}) as Record<string, unknown>;
 
-  const { rooms } = await getSiteContent();
+  const { rooms, siteConfig } = await getSiteContent();
   const room = rooms.find((r) => r.slug === roomSlug);
   if (!room) {
     return NextResponse.json({ error: "Unknown room type." }, { status: 400 });
@@ -92,7 +94,42 @@ export async function POST(req: Request) {
     },
   });
 
-  // In production: send the guest a confirmation email, and notify front desk.
+  const [guestEmailResult, staffEmailResult] = await Promise.all([
+    sendReservationConfirmation({
+      guestEmail: reservation.guestEmail,
+      guestName: reservation.guestName,
+      confirmationCode: reservation.confirmationCode,
+      roomName: reservation.roomName,
+      checkIn: reservation.checkIn,
+      checkOut: reservation.checkOut,
+      guests: reservation.guests,
+      totalPriceUsd: reservation.totalPriceUsd,
+      hotelName: siteConfig.name,
+      hotelEmail: siteConfig.email,
+      hotelPhone: siteConfig.phone,
+    }),
+    sendStaffNotification({
+      hotelEmail: siteConfig.email,
+      subject: `New reservation — ${reservation.confirmationCode}`,
+      text: `${reservation.guestName} (${reservation.guestEmail}) booked ${reservation.roomName} for ${reservation.checkIn} to ${reservation.checkOut}. Total: $${reservation.totalPriceUsd.toLocaleString()}.`,
+    }),
+  ]);
+
+  // A failed email should never fail the booking itself — it's already
+  // saved — but staff should still be able to see it happened.
+  if (!guestEmailResult.sent || !staffEmailResult.sent) {
+    await logActivity({
+      action: "email_failed",
+      entity: "reservation",
+      entityId: reservation.id,
+      summary: `Confirmation email(s) for ${reservation.confirmationCode} did not send: ${[
+        !guestEmailResult.sent && `guest (${guestEmailResult.error})`,
+        !staffEmailResult.sent && `staff (${staffEmailResult.error})`,
+      ]
+        .filter(Boolean)
+        .join(", ")}`,
+    });
+  }
 
   return NextResponse.json(
     { confirmationCode: reservation.confirmationCode, totalPriceUsd, nights },

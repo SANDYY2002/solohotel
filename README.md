@@ -95,14 +95,18 @@ src/
 
 ## Booking system
 
-`src/components/booking/booking-widget.tsx` implements the full flow against the dummy room data in `src/data/rooms.ts`, backed by a real database:
+`src/components/booking/booking-widget.tsx` implements the full flow against room data managed via `/admin/content/rooms`, backed by a real database:
 
 1. **Search** — check-in/check-out dates (with validation), guest count, room type, promo code (`YUKIN10` applies a 10% demo discount)
 2. **Results** — filtered, priced availability with a simulated network delay
 3. **Guest details** — name, email, phone, special requests
-4. **Confirmation** — `POST /api/reservations` validates the request, computes the total server-side, generates a confirmation code, and saves it — visible immediately at `/admin/reservations`
+4. **Confirmation** — `POST /api/reservations` validates the request, rejects it if the room is already booked for any overlapping date (see below), computes the total server-side, generates a confirmation code, saves it, and sends a confirmation email to the guest plus a notification to staff (see "Email notifications" below) — visible immediately at `/admin/reservations`
 
-Wire in your PMS/channel manager and a payment provider (see "Going to production" below) for a live property.
+**Double-booking is prevented** at the database level: before creating a reservation, the API checks for any other non-cancelled reservation on the same room with overlapping dates, and rejects the request with a 409 if one exists. Back-to-back bookings (a new check-in on the same day another guest checks out) are correctly allowed.
+
+**`/admin/calendar`** shows a visual month-by-month occupancy grid — one row per room, color-coded by status (held vs. confirmed), click any booked day to open that reservation's full detail panel. Useful for spotting gaps or double-checking availability at a glance.
+
+Wire in your PMS/channel manager and a payment provider (see "Going to production" below) for a live property — this still just holds a reservation, no money changes hands yet.
 
 ## Admin dashboard (contact messages + reservations)
 
@@ -219,7 +223,19 @@ Without a token configured, the upload button returns a clear error explaining i
 
 Every phone number on the site (footer, contact page, the map card) now uses `src/components/shared/phone-link.tsx` instead of a plain `tel:` link. Clicking it opens a small menu with **Call** and **WhatsApp** options — WhatsApp opens `https://wa.me/<number>` in a new tab. Set the WhatsApp number (if it differs from the main phone number) under **Site Settings** in the admin dashboard.
 
-## Content & imagery
+## Email notifications
+
+Two things trigger email automatically: a guest completing a booking gets a confirmation with their reservation details, and staff get notified at `siteConfig.email` (set under Site Settings) whenever a new reservation or contact message (including the concierge chat widget, which saves through the same pipeline) comes in.
+
+This uses [Resend](https://resend.com) — free for up to 3,000 emails/month, no credit card required.
+
+**Setup:**
+1. Sign up at resend.com, go to **API Keys → Create API Key**, copy it.
+2. Set `RESEND_API_KEY` in your environment (locally in `.env`, in production via Vercel's Environment Variables).
+3. That's it for testing — by default, emails send from Resend's shared sandbox address, which only delivers to the email on your own Resend account. To send to real guests, verify your own domain in Resend (**Domains → Add Domain**, then add the DNS records it gives you) and set `RESEND_FROM_EMAIL` to an address on it, e.g. `reservations@yourdomain.com`.
+
+**If `RESEND_API_KEY` isn't set**, bookings and contact messages work exactly as before — nothing breaks, emails are just skipped. If an email fails to send for any reason (bad API key, Resend outage, etc.), it's recorded in the **Activity Log** so staff notice rather than silently missing a confirmation.
+
 
 All copy, pricing, staff, and awards are placeholder content for a fictional property, editable via `/admin/content` (see above). Imagery is served from Unsplash for this demo and can be replaced with your own photos directly in the admin dashboard (paste a URL or upload from your device).
 
