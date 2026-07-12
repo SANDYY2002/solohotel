@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, Users, Tag, Search, CheckCircle2, Loader2, User, Mail, Phone } from "lucide-react";
 import { Label, Select, Input, Textarea } from "@/components/ui/input";
@@ -303,6 +304,9 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
             <p className="mt-1 text-xs text-stone-500">
               A confirmation email will be sent to {guestEmail} to complete payment details.
             </p>
+            <Link href="/manage-booking" className="mt-3 text-xs text-stone-500 underline hover:text-bronze-500">
+              View or manage this booking anytime
+            </Link>
             <Button
               className="mt-6"
               variant="outline"
