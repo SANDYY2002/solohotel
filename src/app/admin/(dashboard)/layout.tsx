@@ -1,20 +1,30 @@
 import Link from "next/link";
-import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate, BarChart3, History, Send, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate, BarChart3, History, Send, CalendarDays, Users } from "lucide-react";
 import { getSiteContent } from "@/lib/content-store";
+import { getCurrentStaffFromCookies } from "@/lib/current-staff";
 import { AdminLogoutButton } from "@/components/admin/logout-button";
 import { ToastProvider } from "@/components/admin/toast-provider";
+import { SessionTimeout } from "@/components/admin/session-timeout";
 
 // Always read the latest content from the database on every request.
 export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { siteConfig } = await getSiteContent();
+  const [{ siteConfig }, currentStaff] = await Promise.all([getSiteContent(), getCurrentStaffFromCookies()]);
+
   return (
     <ToastProvider>
+      <SessionTimeout />
       <div className="flex min-h-screen bg-stone-50 dark:bg-conservatory-950">
         <aside className="hidden w-64 flex-shrink-0 border-r border-stone-200 p-6 dark:border-stone-800 md:block">
           <p className="font-display text-lg uppercase tracking-widest2">{siteConfig.name}</p>
-          <p className="mb-8 text-xs text-stone-500">Staff Admin</p>
+          {currentStaff ? (
+            <p className="mb-8 text-xs text-stone-500">
+              {currentStaff.name} · <span className="text-bronze-400">{currentStaff.role === "OWNER" ? "Owner" : "Staff"}</span>
+            </p>
+          ) : (
+            <p className="mb-8 text-xs text-stone-500">Staff Admin</p>
+          )}
           <nav className="space-y-1">
             <Link href="/admin" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
               <LayoutDashboard className="h-4 w-4" /> Overview
@@ -40,6 +50,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/activity" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
               <History className="h-4 w-4" /> Activity Log
             </Link>
+            {currentStaff?.role === "OWNER" && (
+              <Link href="/admin/staff" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
+                <Users className="h-4 w-4" /> Staff Accounts
+              </Link>
+            )}
           </nav>
           <div className="mt-8 border-t border-stone-200 pt-4 dark:border-stone-800">
             <AdminLogoutButton />

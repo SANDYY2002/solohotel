@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
+import { getCurrentStaff } from "@/lib/current-staff";
 import { getSiteContent, updateSiteContentSection } from "@/lib/content-store";
 import { CONTENT_SECTIONS, type ContentSection } from "@/lib/content-types";
 import { logActivity } from "@/lib/activity-log";
 
 export async function GET(req: Request) {
-  if (!(await requireAdmin(req))) {
+  if (!(await getCurrentStaff(req))) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const content = await getSiteContent();
@@ -13,7 +13,8 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  if (!(await requireAdmin(req))) {
+  const staff = await getCurrentStaff(req);
+  if (!staff) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -41,7 +42,8 @@ export async function PUT(req: Request) {
     action: "content_saved",
     entity: "content",
     entityId: section,
-    summary: `Saved changes to "${section}" content`,
+    summary: `${staff.name} saved changes to "${section}" content`,
+    actorName: staff.name,
   });
   return NextResponse.json(updated);
 }

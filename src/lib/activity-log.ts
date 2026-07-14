@@ -2,9 +2,9 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * Records an admin action for the audit trail (Activity Log page).
- * There's a single shared admin password rather than per-user accounts,
- * so every entry is attributed to "Staff" — this still answers *what*
- * changed and *when*, which covers most of what an audit trail is for.
+ * Pass `actorName` (from getCurrentStaff()) wherever the calling route
+ * knows who's acting — falls back to "Staff" for the handful of call
+ * sites that don't have that yet (e.g. system-triggered entries).
  *
  * Never throws: a logging failure should never block the actual action
  * (status change, delete, content save) that triggered it.
@@ -14,6 +14,7 @@ export async function logActivity(params: {
   entity: string;
   entityId?: string | null;
   summary: string;
+  actorName?: string;
 }): Promise<void> {
   try {
     await prisma.adminActivityLog.create({
@@ -21,6 +22,7 @@ export async function logActivity(params: {
         action: params.action,
         entity: params.entity,
         entityId: params.entityId ?? null,
+        actorName: params.actorName ?? "Staff",
         summary: params.summary,
       },
     });

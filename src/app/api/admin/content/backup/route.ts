@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
+import { getCurrentStaff } from "@/lib/current-staff";
 import { getSiteContent, replaceSiteContent } from "@/lib/content-store";
 import { CONTENT_SECTIONS } from "@/lib/content-types";
 import { logActivity } from "@/lib/activity-log";
 
 /** GET returns the full site content, for download as a backup file. */
 export async function GET(req: Request) {
-  if (!(await requireAdmin(req))) {
+  if (!(await getCurrentStaff(req))) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const content = await getSiteContent();
@@ -15,7 +15,8 @@ export async function GET(req: Request) {
 
 /** POST replaces the full site content — used to restore from a backup file. */
 export async function POST(req: Request) {
-  if (!(await requireAdmin(req))) {
+  const staff = await getCurrentStaff(req);
+  if (!staff) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -42,7 +43,8 @@ export async function POST(req: Request) {
   await logActivity({
     action: "content_restored",
     entity: "content",
-    summary: "Restored all site content from a backup file",
+    summary: `${staff.name} restored all site content from a backup file`,
+    actorName: staff.name,
   });
 
   return NextResponse.json(restored);

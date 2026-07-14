@@ -74,6 +74,7 @@ model AdminActivityLog {
   action    String
   entity    String
   entityId  String?
+  actorName String   @default("Staff")
   summary   String   @db.Text
   createdAt DateTime @default(now())
 
@@ -91,6 +92,24 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// Individual staff accounts, replacing the single shared ADMIN_PASSWORD.
+// Two roles: OWNER can manage other staff accounts; STAFF can do
+// everything else in the admin dashboard. The very first account is
+// created automatically on first login using ADMIN_PASSWORD as a one-time
+// bootstrap credential — see src/app/api/admin/login/route.ts.
+model StaffAccount {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         String    @default("STAFF")
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([email])
 }
 
 model SiteContent {

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin-auth";
+import { getCurrentStaff } from "@/lib/current-staff";
 import { logActivity } from "@/lib/activity-log";
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  if (!(await requireAdmin(req))) {
+  const staff = await getCurrentStaff(req);
+  if (!staff) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -33,6 +34,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       entity: "reservation",
       entityId: updated.id,
       summary: `Reservation ${updated.confirmationCode} (${updated.guestName}) moved from ${before.status} to ${data.status}`,
+      actorName: staff.name,
     });
   }
   if (data.notes !== undefined) {
@@ -41,6 +43,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       entity: "reservation",
       entityId: updated.id,
       summary: `Notes updated on reservation ${updated.confirmationCode}`,
+      actorName: staff.name,
     });
   }
 
@@ -48,7 +51,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 }
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  if (!(await requireAdmin(req))) {
+  const staff = await getCurrentStaff(req);
+  if (!staff) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -63,6 +67,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     entity: "reservation",
     entityId: params.id,
     summary: `Deleted reservation ${existing.confirmationCode} for ${existing.guestName}`,
+    actorName: staff.name,
   });
 
   return NextResponse.json({ ok: true });

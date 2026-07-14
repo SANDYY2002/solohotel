@@ -160,14 +160,23 @@ This creates the `ContactSubmission`, `Reservation`, and `SiteContent` tables in
 
 ### 4. Sign in
 
-Visit `/admin/login` and enter your `ADMIN_PASSWORD`. You'll land on `/admin`, with:
+Visit `/admin/login`. **The first time**, since no staff accounts exist yet, you'll see a "create the first admin account" form instead of a login form — enter your `ADMIN_PASSWORD` as the setup key, plus your name, email, and a new password (8+ characters). This creates your account as **Owner** and signs you in. `ADMIN_PASSWORD` is never checked again after this — every login from here on is your email + the password you just chose.
 
-- **`/admin`** — counts of new messages and pending reservations
-- **`/admin/contacts`** — every contact-form submission, with a status dropdown (New / Read / Responded)
-- **`/admin/reservations`** — every booking made through the widget, with guest name, email, phone, dates, room, total price, and a status dropdown (Held / Confirmed / Cancelled) — this is where staff see and manage all reservations end to end
-- **View a single reservation's data:** the table already shows everything staff need at a glance; open MySQL directly (`npx prisma studio` gives a GUI) if you need to query further
+You'll land on `/admin`, with:
 
-Auth is a single shared password behind a signed, HTTP-only session cookie (`src/lib/admin-auth.ts`, enforced by `src/middleware.ts`) — intentionally simple for a one-team internal tool. Swap in NextAuth/Clerk if you need multiple staff logins, roles, or an audit trail.
+- **`/admin`** — counts of new messages/reservations, plus today's arrivals and departures
+- **`/admin/analytics`** — bookings/revenue trends, status breakdowns, most-booked rooms
+- **`/admin/content`** — the site CMS (see "Site content management" below)
+- **`/admin/contacts`** — every contact-form submission (including concierge chat messages), searchable/sortable/filterable, with status, internal notes, and delete
+- **`/admin/reservations`** — every booking, same tools as contacts, plus CSV export and bulk status changes
+- **`/admin/calendar`** — visual month-by-month room occupancy
+- **`/admin/newsletter`** — footer signup subscribers, with CSV export
+- **`/admin/activity`** — an audit trail: every status change, deletion, content save, and login is logged with who did it and when
+- **`/admin/staff`** — **Owners only.** Add/deactivate/delete staff accounts, change roles, reset passwords
+
+**Roles:** **Owner** can do everything, including managing other staff accounts. **Staff** can do everything except that. The system won't let you deactivate, demote, or delete the last active Owner — there's always a way back in.
+
+**Sessions** expire after 8 hours regardless of activity, and separately, **auto-log-out after 25 minutes of inactivity** (with a 60-second warning first) — both enforced by `src/lib/admin-auth.ts` and `src/components/admin/session-timeout.tsx`.
 
 ### Going to production (Vercel + TiDB)
 

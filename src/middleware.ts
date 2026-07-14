@@ -7,9 +7,9 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/admin/login") return NextResponse.next();
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;
-  const valid = await verifySessionToken(token);
+  const session = await verifySessionToken(token);
 
-  if (!valid) {
+  if (!session) {
     const loginUrl = new URL("/admin/login", req.url);
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);

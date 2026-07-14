@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin-auth";
+import { getCurrentStaff } from "@/lib/current-staff";
 import { logActivity } from "@/lib/activity-log";
 
 const VALID_STATUSES = ["NEW", "READ", "RESPONDED"];
 
 export async function POST(req: Request) {
-  if (!(await requireAdmin(req))) {
+  const staff = await getCurrentStaff(req);
+  if (!staff) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
     action: "bulk_status_changed",
     entity: "contact",
     summary: `Bulk-updated ${result.count} message${result.count !== 1 ? "s" : ""} to ${status}`,
+    actorName: staff.name,
   });
 
   return NextResponse.json({ count: result.count });
