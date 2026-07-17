@@ -68,6 +68,38 @@ export function SiteConfigEditor({ initial }: { initial: SiteConfig }) {
         </section>
 
         <section>
+          <h2 className="mb-3 font-display text-lg">Payments</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="depositPercentage">Deposit required at booking (%)</Label>
+              <Input
+                id="depositPercentage"
+                type="number"
+                min={0}
+                max={100}
+                value={data.depositPercentage}
+                onChange={(e) => set("depositPercentage", Math.max(0, Math.min(100, Number(e.target.value))))}
+              />
+              <p className="mt-1 text-xs text-stone-400">100 = full payment at booking. Lower charges a deposit only.</p>
+            </div>
+            <div>
+              <Label htmlFor="usdToNprRate">USD → NPR rate</Label>
+              <Input
+                id="usdToNprRate"
+                type="number"
+                min={1}
+                step="0.01"
+                value={data.usdToNprRate}
+                onChange={(e) => set("usdToNprRate", Number(e.target.value))}
+              />
+              <p className="mt-1 text-xs text-stone-400">
+                eSewa and Khalti only accept NPR. Update this periodically — it&apos;s not a live exchange rate.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section>
           <h2 className="mb-3 font-display text-lg">Map coordinates</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>

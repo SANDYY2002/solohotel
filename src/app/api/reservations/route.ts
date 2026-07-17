@@ -4,6 +4,7 @@ import { getSiteContent } from "@/lib/content-store";
 import { nightsBetween } from "@/lib/utils";
 import { sendReservationConfirmation, sendStaffNotification } from "@/lib/email";
 import { logActivity } from "@/lib/activity-log";
+import { depositAmountUsd } from "@/lib/currency";
 
 function generateConfirmationCode() {
   return `YKN-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
@@ -68,6 +69,8 @@ export async function POST(req: Request) {
   const nights = nightsBetween(checkIn, checkOut);
   const promo = typeof promoCode === "string" && promoCode.trim().toUpperCase() === "YUKIN10" ? 0.1 : 0;
   const totalPriceUsd = Math.round(room.pricePerNight * nights * (1 - promo));
+  const dueUsd = depositAmountUsd(totalPriceUsd, siteConfig.depositPercentage);
+  const requiresPayment = dueUsd > 0;
 
   let confirmationCode = generateConfirmationCode();
   // Guard against the (astronomically unlikely) collision on the unique code.
@@ -91,48 +94,80 @@ export async function POST(req: Request) {
       guestEmail: guestEmail.trim(),
       guestPhone: typeof guestPhone === "string" && guestPhone.trim() ? guestPhone.trim() : null,
       specialRequests: typeof specialRequests === "string" && specialRequests.trim() ? specialRequests.trim() : null,
+      // No deposit configured (0%) means nothing to collect online — treat
+      // as confirmed and paid immediately, same as the old pay-at-property
+      // behavior this project started with.
+      status: requiresPayment ? "HELD" : "CONFIRMED",
+      paymentStatus: requiresPayment ? "PENDING" : "PAID",
+      paidAt: requiresPayment ? null : new Date(),
     },
   });
 
-  const [guestEmailResult, staffEmailResult] = await Promise.all([
-    sendReservationConfirmation({
-      guestEmail: reservation.guestEmail,
-      guestName: reservation.guestName,
-      confirmationCode: reservation.confirmationCode,
-      roomName: reservation.roomName,
-      checkIn: reservation.checkIn,
-      checkOut: reservation.checkOut,
-      guests: reservation.guests,
-      totalPriceUsd: reservation.totalPriceUsd,
-      hotelName: siteConfig.name,
+  if (!requiresPayment) {
+    // Nothing to collect online — this is as confirmed as it'll get, so
+    // send the guest their confirmation right away like before.
+    const [guestEmailResult, staffEmailResult] = await Promise.all([
+      sendReservationConfirmation({
+        guestEmail: reservation.guestEmail,
+        guestName: reservation.guestName,
+        confirmationCode: reservation.confirmationCode,
+        roomName: reservation.roomName,
+        checkIn: reservation.checkIn,
+        checkOut: reservation.checkOut,
+        guests: reservation.guests,
+        totalPriceUsd: reservation.totalPriceUsd,
+        hotelName: siteConfig.name,
+        hotelEmail: siteConfig.email,
+        hotelPhone: siteConfig.phone,
+      }),
+      sendStaffNotification({
+        hotelEmail: siteConfig.email,
+        subject: `New reservation — ${reservation.confirmationCode}`,
+        text: `${reservation.guestName} (${reservation.guestEmail}) booked ${reservation.roomName} for ${reservation.checkIn} to ${reservation.checkOut}. Total: $${reservation.totalPriceUsd.toLocaleString()}.`,
+      }),
+    ]);
+    if (!guestEmailResult.sent || !staffEmailResult.sent) {
+      await logActivity({
+        action: "email_failed",
+        entity: "reservation",
+        entityId: reservation.id,
+        summary: `Confirmation email(s) for ${reservation.confirmationCode} did not send: ${[
+          !guestEmailResult.sent && `guest (${guestEmailResult.error})`,
+          !staffEmailResult.sent && `staff (${staffEmailResult.error})`,
+        ]
+          .filter(Boolean)
+          .join(", ")}`,
+      });
+    }
+  } else {
+    // Payment still pending — the guest hasn't been promised a confirmed
+    // room yet, so no guest email until payment actually succeeds (see
+    // the /api/payments/*/callback routes). Staff still get visibility
+    // into the attempt, in case the guest abandons at the payment step.
+    const staffEmailResult = await sendStaffNotification({
       hotelEmail: siteConfig.email,
-      hotelPhone: siteConfig.phone,
-    }),
-    sendStaffNotification({
-      hotelEmail: siteConfig.email,
-      subject: `New reservation — ${reservation.confirmationCode}`,
-      text: `${reservation.guestName} (${reservation.guestEmail}) booked ${reservation.roomName} for ${reservation.checkIn} to ${reservation.checkOut}. Total: $${reservation.totalPriceUsd.toLocaleString()}.`,
-    }),
-  ]);
-
-  // A failed email should never fail the booking itself — it's already
-  // saved — but staff should still be able to see it happened.
-  if (!guestEmailResult.sent || !staffEmailResult.sent) {
-    await logActivity({
-      action: "email_failed",
-      entity: "reservation",
-      entityId: reservation.id,
-      summary: `Confirmation email(s) for ${reservation.confirmationCode} did not send: ${[
-        !guestEmailResult.sent && `guest (${guestEmailResult.error})`,
-        !staffEmailResult.sent && `staff (${staffEmailResult.error})`,
-      ]
-        .filter(Boolean)
-        .join(", ")}`,
+      subject: `Reservation pending payment — ${reservation.confirmationCode}`,
+      text: `${reservation.guestName} (${reservation.guestEmail}) started booking ${reservation.roomName} for ${reservation.checkIn} to ${reservation.checkOut} and is being directed to pay $${dueUsd.toLocaleString()}. Will confirm automatically once payment completes.`,
     });
+    if (!staffEmailResult.sent) {
+      await logActivity({
+        action: "email_failed",
+        entity: "reservation",
+        entityId: reservation.id,
+        summary: `Staff notification for pending reservation ${reservation.confirmationCode} did not send: ${staffEmailResult.error}`,
+      });
+    }
   }
 
   return NextResponse.json(
-    { confirmationCode: reservation.confirmationCode, totalPriceUsd, nights },
+    {
+      reservationId: reservation.id,
+      confirmationCode: reservation.confirmationCode,
+      totalPriceUsd,
+      nights,
+      dueUsd,
+      requiresPayment,
+    },
     { status: 201 }
   );
 }

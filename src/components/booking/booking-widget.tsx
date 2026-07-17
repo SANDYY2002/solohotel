@@ -6,11 +6,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, Users, Tag, Search, CheckCircle2, Loader2, User, Mail, Phone } from "lucide-react";
 import { Label, Select, Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PaymentMethodSelector } from "@/components/booking/payment-method-selector";
 import { useSiteContent } from "@/lib/site-content-context";
 import { formatUSD, nightsBetween } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-type Step = "search" | "results" | "details" | "confirmed";
+type Step = "search" | "results" | "details" | "payment" | "confirmed";
 
 function todayISO(offsetDays = 0) {
   const d = new Date();
@@ -30,6 +31,8 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
   const [selected, setSelected] = React.useState<(typeof rooms)[number] | null>(null);
   const [confirmation, setConfirmation] = React.useState<string | null>(null);
   const [confirmedTotal, setConfirmedTotal] = React.useState<number | null>(null);
+  const [reservationId, setReservationId] = React.useState<string | null>(null);
+  const [dueUsd, setDueUsd] = React.useState<number>(0);
   const [dateError, setDateError] = React.useState<string | null>(null);
   const [guestName, setGuestName] = React.useState("");
   const [guestEmail, setGuestEmail] = React.useState("");
@@ -94,7 +97,9 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
       }
       setConfirmation(data.confirmationCode);
       setConfirmedTotal(data.totalPriceUsd);
-      setStep("confirmed");
+      setReservationId(data.reservationId);
+      setDueUsd(data.dueUsd ?? 0);
+      setStep(data.requiresPayment ? "payment" : "confirmed");
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -284,6 +289,33 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
           </motion.form>
         )}
 
+        {step === "payment" && selected && reservationId && (
+          <motion.div
+            key="payment"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="py-6"
+          >
+            <div className="text-center">
+              <h3 className="font-display text-2xl">Complete Your Booking</h3>
+              <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
+                {selected.name} · {checkIn} → {checkOut}
+              </p>
+              <p className="mt-1 font-mono text-sm text-bronze-500">Confirmation #{confirmation}</p>
+            </div>
+            <div className="mx-auto mt-6 max-w-sm">
+              <PaymentMethodSelector reservationId={reservationId} email={guestEmail} amountDueUsd={dueUsd} />
+            </div>
+            <p className="mt-4 text-center text-xs text-stone-400">
+              Your room is held while you complete payment.{" "}
+              <Link href="/manage-booking" className="underline hover:text-bronze-500">
+                Finish this later
+              </Link>
+            </p>
+          </motion.div>
+        )}
+
         {step === "confirmed" && selected && (
           <motion.div
             key="confirmed"
@@ -293,7 +325,7 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
             className="flex flex-col items-center py-6 text-center"
           >
             <CheckCircle2 className="h-12 w-12 text-conservatory-500" />
-            <h3 className="mt-4 font-display text-2xl">Reservation Held</h3>
+            <h3 className="mt-4 font-display text-2xl">Reservation Confirmed</h3>
             <p className="mt-2 max-w-md text-sm text-stone-600 dark:text-stone-400">
               {selected.name} · {checkIn} → {checkOut} · {guests} guest{Number(guests) > 1 ? "s" : ""}
             </p>
@@ -301,9 +333,7 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
               <p className="mt-1 text-sm font-medium text-bronze-500">{formatUSD(confirmedTotal)} total</p>
             )}
             <p className="mt-4 font-mono text-sm text-bronze-500">Confirmation #{confirmation}</p>
-            <p className="mt-1 text-xs text-stone-500">
-              A confirmation email will be sent to {guestEmail} to complete payment details.
-            </p>
+            <p className="mt-1 text-xs text-stone-500">A confirmation email has been sent to {guestEmail}.</p>
             <Link href="/manage-booking" className="mt-3 text-xs text-stone-500 underline hover:text-bronze-500">
               View or manage this booking anytime
             </Link>

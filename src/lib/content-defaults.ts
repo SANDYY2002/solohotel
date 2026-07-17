@@ -30,6 +30,8 @@ export const DEFAULT_CONTENT: SiteContent = {
       { label: "Contact", href: "/contact" },
     ],
     bookingCta: "Check Availability",
+    depositPercentage: 100,
+    usdToNprRate: 137,
   },
 
   home: {

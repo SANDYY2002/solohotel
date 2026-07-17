@@ -278,7 +278,12 @@ export function ReservationsTable({ reservations }: { reservations: Reservation[
                 <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSelect(r.id)} aria-label={`Select ${r.confirmationCode}`} />
                 </td>
-                <td className="whitespace-nowrap px-4 py-4 font-mono text-xs text-bronze-500">{r.confirmationCode}</td>
+                <td className="whitespace-nowrap px-4 py-4 font-mono text-xs text-bronze-500">
+                  {r.confirmationCode}
+                  {r.paymentStatus === "PAID" && <span className="ml-1.5 text-green-500" title="Paid">●</span>}
+                  {r.paymentStatus === "FAILED" && <span className="ml-1.5 text-red-500" title="Payment failed">●</span>}
+                  {r.paymentStatus === "PENDING" && <span className="ml-1.5 text-stone-300" title="Payment pending">●</span>}
+                </td>
                 <td className="px-4 py-4">
                   <p className="font-medium">{r.guestName}</p>
                   <p className="text-stone-500">{r.guestEmail}</p>
