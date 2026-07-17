@@ -1,0 +1,593 @@
+From 8d65e3026441c8c13d178a4123cedbe56c37faf5 Mon Sep 17 00:00:00 2001
+From: YUKIN <sandeshchhetrii038@gmail.com>
+Date: Fri, 17 Jul 2026 13:56:31 +0000
+Subject: [PATCH] Add admin Appearance controls: theme colors + homepage
+ section layout
+
+- New /admin/appearance page: admins can pick a primary and accent brand
+  color (theme-colors.ts derives the actual shades used across the site
+  from those two picks) and show/hide + reorder homepage sections below
+  the hero (Featured Rooms, Amenities, Dining, Spa, Testimonials,
+  Gallery, FAQ).
+- Colors are wired through CSS custom properties on <html> in the root
+  layout, read by tailwind.config.ts, so the whole site repaints from
+  the existing bg-conservatory-*/text-bronze-* utility classes with no
+  per-component changes.
+- Reuses the existing generic content-section save pipeline (new
+  "appearance" entry in CONTENT_SECTIONS/content-defaults.ts), so it
+  gets auth, validation, and activity logging for free.
+- Homepage now renders its optional sections from
+  appearance.homeSections order/visibility instead of a fixed list.
+---
+ src/app/(marketing)/page.tsx                  |  47 +++-
+ src/app/admin/(dashboard)/appearance/page.tsx |  10 +
+ src/app/admin/(dashboard)/layout.tsx          |   5 +-
+ src/app/globals.css                           |  12 +
+ src/app/layout.tsx                            |   7 +-
+ .../admin/content/appearance-editor.tsx       | 216 ++++++++++++++++++
+ src/lib/content-defaults.ts                   |  18 ++
+ src/lib/content-types.ts                      |  25 ++
+ src/lib/theme-colors.ts                       |  52 +++++
+ tailwind.config.ts                            |  22 +-
+ 10 files changed, 394 insertions(+), 20 deletions(-)
+ create mode 100644 src/app/admin/(dashboard)/appearance/page.tsx
+ create mode 100644 src/components/admin/content/appearance-editor.tsx
+ create mode 100644 src/lib/theme-colors.ts
+
+diff --git a/src/app/(marketing)/page.tsx b/src/app/(marketing)/page.tsx
+index 42b051b..577dbb5 100644
+--- a/src/app/(marketing)/page.tsx
++++ b/src/app/(marketing)/page.tsx
+@@ -10,6 +10,20 @@ import { FaqSection } from "@/components/home/faq-section";
+ import { LocationMap } from "@/components/shared/location-map";
+ import { Reveal } from "@/components/shared/reveal";
+ import { getSiteContent } from "@/lib/content-store";
++import { DEFAULT_CONTENT } from "@/lib/content-defaults";
++import type { HomeSectionKey } from "@/lib/content-types";
++
++// Maps each toggleable homepage section (see /admin/appearance) to its
++// component. Hero and the location map are structural — they always render.
++const HOME_SECTION_COMPONENTS: Record<HomeSectionKey, React.ComponentType> = {
++  featuredRooms: FeaturedRooms,
++  amenities: Amenities,
++  dining: RestaurantSection,
++  spa: SpaSection,
++  testimonials: TestimonialsSection,
++  gallery: GalleryPreview,
++  faq: FaqSection,
++};
+ 
+ // Reads live content from the database on every request — without this,
+ // Next.js would statically prerender this page at build time and never
+@@ -21,20 +35,31 @@ export async function generateMetadata(): Promise<Metadata> {
+   return { title: `${siteConfig.name} — ${siteConfig.tagline}` };
+ }
+ 
+-export default function HomePage() {
++export default async function HomePage() {
++  const { appearance } = await getSiteContent();
++  // Defensive fallback in case a pre-existing site was saved before this
++  // field existed — see content-store.ts's default-merge for the normal path.
++  const homeSections = appearance?.homeSections?.length
++    ? appearance.homeSections
++    : DEFAULT_CONTENT.appearance.homeSections;
++  const visibleSections = homeSections.filter((section) => section.visible);
++
+   return (
+     <>
+       <Hero />
+-      {/* Extra top padding compensates for the booking widget overlapping the hero */}
+-      <div className="pt-20 md:pt-28">
+-        <FeaturedRooms />
+-      </div>
+-      <Amenities />
+-      <RestaurantSection />
+-      <SpaSection />
+-      <TestimonialsSection />
+-      <GalleryPreview />
+-      <FaqSection />
++      {visibleSections.map((section, index) => {
++        const SectionComponent = HOME_SECTION_COMPONENTS[section.key];
++        if (!SectionComponent) return null;
++        // Extra top padding on whichever section renders first compensates
++        // for the booking widget overlapping the hero.
++        return index === 0 ? (
++          <div key={section.key} className="pt-20 md:pt-28">
++            <SectionComponent />
++          </div>
++        ) : (
++          <SectionComponent key={section.key} />
++        );
++      })}
+       <section className="container-hotel pb-24">
+         <Reveal className="mb-10 text-center">
+           <p className="eyebrow">Find us</p>
+diff --git a/src/app/admin/(dashboard)/appearance/page.tsx b/src/app/admin/(dashboard)/appearance/page.tsx
+new file mode 100644
+index 0000000..735326f
+--- /dev/null
++++ b/src/app/admin/(dashboard)/appearance/page.tsx
+@@ -0,0 +1,10 @@
++import { getSiteContent } from "@/lib/content-store";
++import { AppearanceEditor } from "@/components/admin/content/appearance-editor";
++
++// Always read the latest content from the database on every request.
++export const dynamic = "force-dynamic";
++
++export default async function AppearancePage() {
++  const { appearance } = await getSiteContent();
++  return <AppearanceEditor initial={appearance} />;
++}
+diff --git a/src/app/admin/(dashboard)/layout.tsx b/src/app/admin/(dashboard)/layout.tsx
+index 09bdb38..4e9d56c 100644
+--- a/src/app/admin/(dashboard)/layout.tsx
++++ b/src/app/admin/(dashboard)/layout.tsx
+@@ -1,5 +1,5 @@
+ import Link from "next/link";
+-import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate, BarChart3, History, Send, CalendarDays, Users } from "lucide-react";
++import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate, BarChart3, History, Send, CalendarDays, Users, Palette } from "lucide-react";
+ import { getSiteContent } from "@/lib/content-store";
+ import { getCurrentStaffFromCookies } from "@/lib/current-staff";
+ import { AdminLogoutButton } from "@/components/admin/logout-button";
+@@ -35,6 +35,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
+             <Link href="/admin/content" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
+               <LayoutTemplate className="h-4 w-4" /> Site Content
+             </Link>
++            <Link href="/admin/appearance" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
++              <Palette className="h-4 w-4" /> Appearance
++            </Link>
+             <Link href="/admin/contacts" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
+               <Mail className="h-4 w-4" /> Contact Messages
+             </Link>
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 87ca83d..1bd78de 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -6,6 +6,18 @@
+   --font-fraunces: "Fraunces", serif;
+   --font-manrope: "Manrope", sans-serif;
+   --font-mono: "IBM Plex Mono", monospace;
++
++  /* Brand color defaults, expressed as "r g b" triplets so Tailwind's
++     opacity modifiers (e.g. bg-conservatory-900/50) work. The root layout
++     overrides these inline from the admin-chosen theme in
++     /admin/appearance — see src/lib/theme-colors.ts. These values are the
++     site's original design tokens and are what renders before that inline
++     style is present (e.g. very first paint). */
++  --color-primary-900: 15 46 29; /* #0F2E1D */
++  --color-primary-950: 10 26 17; /* #0A1A11 */
++  --color-accent-300: 203 163 101; /* #CBA365 */
++  --color-accent-400: 176 141 87; /* #B08D57 */
++  --color-accent-500: 150 120 74; /* #96784A */
+ }
+ 
+ @layer base {
+diff --git a/src/app/layout.tsx b/src/app/layout.tsx
+index 8c4179c..792049e 100644
+--- a/src/app/layout.tsx
++++ b/src/app/layout.tsx
+@@ -4,6 +4,7 @@ import "./globals.css";
+ import { getSiteContent } from "@/lib/content-store";
+ import { SiteContentProvider } from "@/lib/site-content-context";
+ import { ThemeProvider } from "@/components/shared/theme-provider";
++import { buildThemeCssVars } from "@/lib/theme-colors";
+ 
+ // Every page reads live content from the database via getSiteContent().
+ // Without this, Next.js would try to pre-render pages as static HTML at
+@@ -75,9 +76,13 @@ export async function generateMetadata(): Promise<Metadata> {
+ 
+ export default async function RootLayout({ children }: { children: React.ReactNode }) {
+   const content = await getSiteContent();
++  // Admin-chosen brand colors from /admin/appearance, applied as CSS custom
++  // properties. tailwind.config.ts reads these for its "conservatory" and
++  // "bronze" shades, so this one line repaints the whole site.
++  const themeStyle = buildThemeCssVars(content.appearance?.theme) as React.CSSProperties;
+ 
+   return (
+-    <html lang="en" suppressHydrationWarning>
++    <html lang="en" suppressHydrationWarning style={themeStyle}>
+       <body className={`${fraunces.variable} ${manrope.variable} ${plexMono.variable} font-body`}>
+         <SiteContentProvider value={content}>
+           <ThemeProvider>
+diff --git a/src/components/admin/content/appearance-editor.tsx b/src/components/admin/content/appearance-editor.tsx
+new file mode 100644
+index 0000000..7d929bf
+--- /dev/null
++++ b/src/components/admin/content/appearance-editor.tsx
+@@ -0,0 +1,216 @@
++"use client";
++
++import * as React from "react";
++import { ArrowUp, ArrowDown, Eye, EyeOff, RotateCcw } from "lucide-react";
++import { Label } from "@/components/ui/input";
++import { Button } from "@/components/ui/button";
++import { SaveBar, useSaveSection } from "@/components/admin/save-bar";
++import { cn } from "@/lib/utils";
++import { DEFAULT_CONTENT } from "@/lib/content-defaults";
++import type { AppearanceContent, HomeSectionToggle } from "@/lib/content-types";
++
++const DEFAULT_THEME = DEFAULT_CONTENT.appearance.theme;
++
++function ColorField({
++  label,
++  value,
++  onChange,
++}: {
++  label: string;
++  value: string;
++  onChange: (hex: string) => void;
++}) {
++  const isValid = /^#[0-9a-fA-F]{6}$/.test(value);
++
++  return (
++    <div>
++      <Label>{label}</Label>
++      <div className="flex items-center gap-3">
++        <input
++          type="color"
++          value={isValid ? value : "#000000"}
++          onChange={(e) => onChange(e.target.value)}
++          className="h-11 w-14 cursor-pointer rounded-sm border border-stone-300 bg-transparent p-1 dark:border-stone-700"
++          aria-label={`${label} color picker`}
++        />
++        <input
++          type="text"
++          value={value}
++          onChange={(e) => onChange(e.target.value)}
++          placeholder="#0F2E1D"
++          spellCheck={false}
++          className={cn(
++            "h-11 w-32 rounded-sm border bg-white/60 px-3 font-mono text-sm text-stone-800",
++            "dark:bg-stone-900/40 dark:text-stone-100",
++            isValid ? "border-stone-300 dark:border-stone-700" : "border-red-400"
++          )}
++        />
++        {!isValid && <span className="text-xs text-red-500">Use a 6-digit hex code</span>}
++      </div>
++    </div>
++  );
++}
++
++function SectionToggleList({
++  sections,
++  onChange,
++}: {
++  sections: HomeSectionToggle[];
++  onChange: (next: HomeSectionToggle[]) => void;
++}) {
++  function move(index: number, direction: -1 | 1) {
++    const target = index + direction;
++    const a = sections[index];
++    const b = sections[target];
++    if (!a || !b) return;
++    const next = [...sections];
++    next[index] = b;
++    next[target] = a;
++    onChange(next);
++  }
++
++  function toggleVisible(index: number) {
++    const current = sections[index];
++    if (!current) return;
++    const next = [...sections];
++    next[index] = { ...current, visible: !current.visible };
++    onChange(next);
++  }
++
++  return (
++    <ul className="max-w-xl divide-y divide-stone-200 overflow-hidden rounded-sm border border-stone-200 dark:divide-stone-800 dark:border-stone-800">
++      {sections.map((section, index) => (
++        <li
++          key={section.key}
++          className={cn(
++            "flex items-center justify-between gap-3 bg-white/60 px-4 py-3 dark:bg-stone-900/30",
++            !section.visible && "opacity-50"
++          )}
++        >
++          <div className="flex items-center gap-3">
++            <span className="font-mono text-xs text-stone-400">{index + 1}</span>
++            <span className="text-sm">{section.label}</span>
++          </div>
++          <div className="flex items-center gap-1">
++            <Button
++              type="button"
++              variant="ghost"
++              size="sm"
++              className="h-8 w-8 p-0"
++              onClick={() => move(index, -1)}
++              disabled={index === 0}
++              aria-label={`Move ${section.label} up`}
++            >
++              <ArrowUp className="h-4 w-4" />
++            </Button>
++            <Button
++              type="button"
++              variant="ghost"
++              size="sm"
++              className="h-8 w-8 p-0"
++              onClick={() => move(index, 1)}
++              disabled={index === sections.length - 1}
++              aria-label={`Move ${section.label} down`}
++            >
++              <ArrowDown className="h-4 w-4" />
++            </Button>
++            <Button
++              type="button"
++              variant="ghost"
++              size="sm"
++              className="h-8 w-8 p-0"
++              onClick={() => toggleVisible(index)}
++              aria-label={section.visible ? `Hide ${section.label}` : `Show ${section.label}`}
++            >
++              {section.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
++            </Button>
++          </div>
++        </li>
++      ))}
++    </ul>
++  );
++}
++
++export function AppearanceEditor({ initial }: { initial: AppearanceContent }) {
++  const { data, setData, save, state, errorMessage } = useSaveSection("appearance", initial);
++
++  return (
++    <div>
++      <SaveBar
++        title="Appearance"
++        description="Brand colors and homepage section layout — changes apply across the whole site immediately."
++        state={state}
++        errorMessage={errorMessage}
++        onSave={save}
++      />
++
++      <div className="max-w-2xl space-y-10">
++        <section>
++          <div className="mb-3 flex items-center justify-between">
++            <h2 className="font-display text-lg">Theme colors</h2>
++            <Button
++              type="button"
++              variant="ghost"
++              size="sm"
++              onClick={() => setData({ ...data, theme: { ...DEFAULT_THEME } })}
++            >
++              <RotateCcw className="h-3.5 w-3.5" /> Reset to default
++            </Button>
++          </div>
++          <p className="mb-4 text-sm text-stone-500 dark:text-stone-400">
++            Primary is the deep brand color used for dark backgrounds and primary buttons. Accent is
++            the highlight color used for links, borders, and small details throughout the site.
++          </p>
++          <div className="flex flex-wrap gap-6">
++            <ColorField
++              label="Primary color"
++              value={data.theme.primary}
++              onChange={(hex) => setData({ ...data, theme: { ...data.theme, primary: hex } })}
++            />
++            <ColorField
++              label="Accent color"
++              value={data.theme.accent}
++              onChange={(hex) => setData({ ...data, theme: { ...data.theme, accent: hex } })}
++            />
++          </div>
++
++          {/* Live preview so the admin can see the pairing before saving */}
++          <div
++            className="mt-6 flex items-center gap-4 rounded-sm border border-stone-200 p-4 dark:border-stone-800"
++            style={
++              {
++                "--preview-primary": /^#[0-9a-fA-F]{6}$/.test(data.theme.primary) ? data.theme.primary : "#0F2E1D",
++                "--preview-accent": /^#[0-9a-fA-F]{6}$/.test(data.theme.accent) ? data.theme.accent : "#B08D57",
++              } as React.CSSProperties
++            }
++          >
++            <div
++              className="flex h-16 flex-1 items-center justify-center rounded-sm text-xs font-medium uppercase tracking-widest2"
++              style={{ background: "var(--preview-primary)", color: "white" }}
++            >
++              Primary
++            </div>
++            <div
++              className="flex h-16 flex-1 items-center justify-center rounded-sm text-xs font-medium uppercase tracking-widest2 text-ink"
++              style={{ background: "var(--preview-accent)" }}
++            >
++              Accent
++            </div>
++          </div>
++        </section>
++
++        <section>
++          <h2 className="mb-1 font-display text-lg">Homepage layout</h2>
++          <p className="mb-4 text-sm text-stone-500 dark:text-stone-400">
++            Show, hide, and reorder the sections below the hero. The hero and the &ldquo;Find us&rdquo;
++            map at the bottom are always shown.
++          </p>
++          <SectionToggleList
++            sections={data.homeSections}
++            onChange={(homeSections) => setData({ ...data, homeSections })}
++          />
++        </section>
++      </div>
++    </div>
++  );
++}
+diff --git a/src/lib/content-defaults.ts b/src/lib/content-defaults.ts
+index af54bed..5c0d6ff 100644
+--- a/src/lib/content-defaults.ts
++++ b/src/lib/content-defaults.ts
+@@ -32,6 +32,24 @@ export const DEFAULT_CONTENT: SiteContent = {
+     bookingCta: "Check Availability",
+   },
+ 
++  // Matches the current design tokens in tailwind.config.ts — admins start
++  // from exactly what's live today, then adjust from there.
++  appearance: {
++    theme: {
++      primary: "#0F2E1D",
++      accent: "#B08D57",
++    },
++    homeSections: [
++      { key: "featuredRooms", label: "Featured Rooms", visible: true },
++      { key: "amenities", label: "Amenities", visible: true },
++      { key: "dining", label: "Dining Teaser", visible: true },
++      { key: "spa", label: "Spa Teaser", visible: true },
++      { key: "testimonials", label: "Testimonials", visible: true },
++      { key: "gallery", label: "Gallery Preview", visible: true },
++      { key: "faq", label: "FAQ", visible: true },
++    ],
++  },
++
+   home: {
+     heroImage: "https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?q=80&w=2400&auto=format&fit=crop",
+     amenities: [
+diff --git a/src/lib/content-types.ts b/src/lib/content-types.ts
+index 833f733..7427899 100644
+--- a/src/lib/content-types.ts
++++ b/src/lib/content-types.ts
+@@ -95,8 +95,32 @@ export type AboutContent = {
+   awards: Award[];
+ };
+ 
++// Two base colors the admin picks; every brand shade used across the site
++// (see tailwind.config.ts) is derived from these so the whole palette
++// stays consistent without a picker per shade.
++export type ThemeColors = { primary: string; accent: string };
++
++// Homepage sections an admin can show/hide and reorder. Hero and the
++// location map are structural (booking widget + SEO) and stay fixed.
++export type HomeSectionKey =
++  | "featuredRooms"
++  | "amenities"
++  | "dining"
++  | "spa"
++  | "testimonials"
++  | "gallery"
++  | "faq";
++
++export type HomeSectionToggle = { key: HomeSectionKey; label: string; visible: boolean };
++
++export type AppearanceContent = {
++  theme: ThemeColors;
++  homeSections: HomeSectionToggle[];
++};
++
+ export type SiteContent = {
+   siteConfig: SiteConfig;
++  appearance: AppearanceContent;
+   home: HomeContent;
+   rooms: Room[];
+   dining: DiningContent;
+@@ -109,6 +133,7 @@ export type SiteContent = {
+ 
+ export const CONTENT_SECTIONS = [
+   "siteConfig",
++  "appearance",
+   "home",
+   "rooms",
+   "dining",
+diff --git a/src/lib/theme-colors.ts b/src/lib/theme-colors.ts
+new file mode 100644
+index 0000000..6edeb64
+--- /dev/null
++++ b/src/lib/theme-colors.ts
+@@ -0,0 +1,52 @@
++// Small color-math helpers for the admin "Appearance" theme controls.
++//
++// Admins pick two base colors (primary + accent) in /admin/appearance.
++// Rather than exposing a picker for every shade in the palette, we derive
++// the handful of shades actually used across the site (see the
++// "conservatory" and "bronze" entries in tailwind.config.ts) from those
++// two inputs, so the whole site repaints consistently from one save.
++
++type Rgb = [number, number, number];
++
++// Falls back to the site's original design tokens if a stored value is
++// missing or malformed — the theme should never break the page.
++const DEFAULT_PRIMARY: Rgb = [15, 46, 29]; // #0F2E1D — conservatory-900
++const DEFAULT_ACCENT: Rgb = [176, 141, 87]; // #B08D57 — bronze-400
++
++function parseHex(hex: string): Rgb | null {
++  const match = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
++  const digits = match?.[1];
++  if (!digits) return null;
++  const int = parseInt(digits, 16);
++  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
++}
++
++function mix(rgb: Rgb, target: number, amount: number): Rgb {
++  return rgb.map((c) => Math.round(c + (target - c) * amount)) as Rgb;
++}
++
++function triplet(rgb: Rgb): string {
++  return `${rgb[0]} ${rgb[1]} ${rgb[2]}`;
++}
++
++export type ThemeColorsInput = { primary: string; accent: string } | undefined;
++
++/**
++ * Builds the CSS custom properties that drive the site's brand colors.
++ * Applied on <html> in the root layout, these override the fallback
++ * values baked into tailwind.config.ts + globals.css, so every
++ * `bg-conservatory-900`, `text-bronze-400`, etc. class across the app
++ * repaints — no per-component changes needed.
++ */
++export function buildThemeCssVars(theme: ThemeColorsInput): Record<string, string> {
++  const primary = (theme?.primary && parseHex(theme.primary)) || DEFAULT_PRIMARY;
++  const accent = (theme?.accent && parseHex(theme.accent)) || DEFAULT_ACCENT;
++
++  return {
++    "--color-primary-900": triplet(primary),
++    "--color-primary-950": triplet(mix(primary, 0, 0.3)),
++    "--color-accent-300": triplet(mix(accent, 255, 0.22)),
++    "--color-accent-400": triplet(accent),
++    "--color-accent-500": triplet(mix(accent, 0, 0.2)),
++  };
++}
+diff --git a/tailwind.config.ts b/tailwind.config.ts
+index f981829..760eebf 100644
+--- a/tailwind.config.ts
++++ b/tailwind.config.ts
+@@ -28,7 +28,13 @@ const config: Config = {
+           900: "#1B1815",
+           950: "#100E0C",
+         },
+-        // Brand — "conservatory" deep greens
++        // Brand — "conservatory" deep greens.
++        // 900/950 are wired to CSS custom properties (see globals.css and
++        // src/lib/theme-colors.ts) so an admin-chosen "primary" color in
++        // /admin/appearance repaints every bg-conservatory-900/950 use
++        // across the site. The rest of the ramp stays fixed. The
++        // rgb(... / <alpha-value>) form is required for Tailwind's opacity
++        // modifiers (e.g. bg-conservatory-900/50) to keep working.
+         conservatory: {
+           50: "#EAF0E7",
+           100: "#CBDAC3",
+@@ -39,17 +45,19 @@ const config: Config = {
+           600: "#264721",
+           700: "#1F3A1B",
+           800: "#152813",
+-          900: "#0F2E1D",
+-          950: "#0A1A11",
++          900: "rgb(var(--color-primary-900, 15 46 29) / <alpha-value>)",
++          950: "rgb(var(--color-primary-950, 10 26 17) / <alpha-value>)",
+         },
+-        // Accent — weathered bronze
++        // Accent — weathered bronze. 300/400/500 (the shades actually used
++        // across the app) are wired to the admin-chosen "accent" color the
++        // same way — see the comment above.
+         bronze: {
+           50: "#F7EFE1",
+           100: "#EEDBB8",
+           200: "#DEC08A",
+-          300: "#CBA365",
+-          400: "#B08D57",
+-          500: "#96784A",
++          300: "rgb(var(--color-accent-300, 203 163 101) / <alpha-value>)",
++          400: "rgb(var(--color-accent-400, 176 141 87) / <alpha-value>)",
++          500: "rgb(var(--color-accent-500, 150 120 74) / <alpha-value>)",
+           600: "#7A613B",
+           700: "#5E4B2E",
+           800: "#433522",
+-- 
+2.43.0
+
