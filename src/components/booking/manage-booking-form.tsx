@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Search, Loader2, XCircle, AlertCircle } from "lucide-react";
 import { formatUSD } from "@/lib/utils";
+import { PaymentMethodSelector } from "@/components/booking/payment-method-selector";
 
 type Reservation = {
   id: string;
@@ -16,6 +17,8 @@ type Reservation = {
   guestEmail: string;
   specialRequests: string | null;
   status: string;
+  paymentStatus: string;
+  dueUsd: number;
 };
 
 export function ManageBookingForm() {
@@ -124,6 +127,21 @@ export function ManageBookingForm() {
               </div>
             )}
           </div>
+
+          {reservation.status !== "CANCELLED" && reservation.paymentStatus !== "PAID" && reservation.dueUsd > 0 && (
+            <div className="mt-6 rounded-sm border border-bronze-300 bg-bronze-50 p-4 dark:border-bronze-400/30 dark:bg-bronze-400/10">
+              <p className="text-sm font-medium">
+                {reservation.paymentStatus === "FAILED" ? "Your last payment attempt didn't go through." : "Payment still needed to confirm this reservation."}
+              </p>
+              <div className="mt-3">
+                <PaymentMethodSelector
+                  reservationId={reservation.id}
+                  email={reservation.guestEmail}
+                  amountDueUsd={reservation.dueUsd}
+                />
+              </div>
+            </div>
+          )}
 
           {reservation.status === "CANCELLED" ? (
             <div className="mt-6 flex items-center gap-2 rounded-sm bg-stone-100 p-3 text-sm text-stone-500 dark:bg-stone-900">

@@ -25,6 +25,18 @@ enum ReservationStatus {
   CANCELLED
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  ESEWA
+  KHALTI
+}
+
 model ContactSubmission {
   id        String        @id @default(cuid())
   name      String
@@ -57,12 +69,18 @@ model Reservation {
   specialRequests   String?            @db.Text
   status            ReservationStatus  @default(HELD)
   notes             String?            @db.Text
+  paymentStatus     PaymentStatus      @default(PENDING)
+  paymentMethod     PaymentMethod?
+  paymentTxnId      String?
+  paymentAmountNpr  Int?
+  paidAt            DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @default(now()) @updatedAt
 
   @@index([status])
   @@index([createdAt])
   @@index([guestEmail])
+  @@index([paymentStatus])
 }
 
 // Lightweight audit trail for admin actions (status changes, deletions,

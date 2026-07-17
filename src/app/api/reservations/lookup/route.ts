@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSiteContent } from "@/lib/content-store";
+import { depositAmountUsd } from "@/lib/currency";
 
 /**
  * Public lookup for a guest to find their own reservation — requires both
@@ -33,6 +35,9 @@ export async function POST(req: Request) {
     );
   }
 
+  const { siteConfig } = await getSiteContent();
+  const dueUsd = depositAmountUsd(reservation.totalPriceUsd, siteConfig.depositPercentage);
+
   return NextResponse.json({
     id: reservation.id,
     confirmationCode: reservation.confirmationCode,
@@ -45,5 +50,7 @@ export async function POST(req: Request) {
     guestEmail: reservation.guestEmail,
     specialRequests: reservation.specialRequests,
     status: reservation.status,
+    paymentStatus: reservation.paymentStatus,
+    dueUsd,
   });
 }

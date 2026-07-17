@@ -69,6 +69,25 @@ export function ReservationDetail({ reservation, onClose }: { reservation: Reser
         <Field label="Check-out">{reservation.checkOut}</Field>
         {reservation.promoCode && <Field label="Promo code">{reservation.promoCode}</Field>}
         <Field label="Booked">{formatDate(reservation.createdAt.toISOString())}</Field>
+        <Field label="Payment">
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-xs font-mono uppercase tracking-wide ${
+              reservation.paymentStatus === "PAID"
+                ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
+                : reservation.paymentStatus === "FAILED"
+                  ? "bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                  : "bg-stone-200 text-stone-500 dark:bg-stone-800"
+            }`}
+          >
+            {reservation.paymentStatus}
+          </span>
+          {reservation.paymentMethod && (
+            <span className="ml-2 text-xs text-stone-500">
+              via {reservation.paymentMethod}
+              {reservation.paymentAmountNpr && ` — NPR ${reservation.paymentAmountNpr.toLocaleString()}`}
+            </span>
+          )}
+        </Field>
       </div>
 
       {reservation.specialRequests && (

@@ -22,6 +22,10 @@ export type SiteConfig = {
   };
   nav: NavItem[];
   bookingCta: string;
+  /** Percentage of the total charged online at booking (0-100). 100 = full payment, lower = a deposit. */
+  depositPercentage: number;
+  /** USD → NPR conversion used to charge eSewa/Khalti, which only accept NPR. Update periodically — this is not a live rate. */
+  usdToNprRate: number;
 };
 
 export type Amenity = { icon: string; title: string; desc: string };

@@ -232,7 +232,25 @@ Without a token configured, the upload button returns a clear error explaining i
 
 Every phone number on the site (footer, contact page, the map card) now uses `src/components/shared/phone-link.tsx` instead of a plain `tel:` link. Clicking it opens a small menu with **Call** and **WhatsApp** options — WhatsApp opens `https://wa.me/<number>` in a new tab. Set the WhatsApp number (if it differs from the main phone number) under **Site Settings** in the admin dashboard.
 
-## Email notifications
+## Payments (eSewa + Khalti)
+
+Booking now collects real payment via [eSewa](https://esewa.com.np) and [Khalti](https://khalti.com), Nepal's two major digital wallets. The flow:
+
+1. Guest fills in booking details → `POST /api/reservations` creates the reservation (`HELD`, `PENDING` payment) and checks for date-overlap as before
+2. Guest picks eSewa or Khalti → redirected to that gateway to pay
+3. Gateway redirects back → the callback route **independently verifies the payment with the gateway's own server** (never trusts the redirect alone — a forged callback can't fake a successful payment) → on success, the reservation becomes `CONFIRMED` + `PAID`, the guest gets their confirmation email, staff get notified
+4. If a guest abandons payment or it fails, the reservation stays held — they can finish paying anytime at `/manage-booking`
+
+**How much is charged:** controlled by two settings under **Site Settings → Payments**:
+- **Deposit %** — 100 (default) charges the full total at booking; lower values charge a deposit; **0 skips online payment entirely** (pay-at-property), and the reservation confirms immediately like this project's original behavior
+- **USD → NPR rate** — both gateways only accept NPR, so this converts the site's USD pricing at checkout. Update it periodically; it's not a live rate
+
+**Setup:**
+- **eSewa** works out of the box against its public UAT sandbox (test card/wallet flow, no signup needed) — nothing to configure to test it. For real payments, get merchant credentials from [merchant.esewa.com.np](https://merchant.esewa.com.np) and set `ESEWA_PRODUCT_CODE`, `ESEWA_SECRET_KEY`, `ESEWA_MODE=production`.
+- **Khalti** requires a free sandbox account even for testing — sign up at [test-admin.khalti.com](https://test-admin.khalti.com), set `KHALTI_SECRET_KEY`. For real payments, get production credentials from [admin.khalti.com](https://admin.khalti.com) and set `KHALTI_MODE=production`.
+
+See `.env.example` for the full list. Relevant code: `src/lib/payments/esewa.ts`, `src/lib/payments/khalti.ts`, `src/app/api/payments/**`.
+
 
 Two things trigger email automatically: a guest completing a booking gets a confirmation with their reservation details, and staff get notified at `siteConfig.email` (set under Site Settings) whenever a new reservation or contact message (including the concierge chat widget, which saves through the same pipeline) comes in.
 
