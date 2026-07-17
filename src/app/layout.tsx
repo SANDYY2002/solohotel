@@ -4,6 +4,7 @@ import "./globals.css";
 import { getSiteContent } from "@/lib/content-store";
 import { SiteContentProvider } from "@/lib/site-content-context";
 import { ThemeProvider } from "@/components/shared/theme-provider";
+import { buildThemeCssVars } from "@/lib/theme-colors";
 
 // Every page reads live content from the database via getSiteContent().
 // Without this, Next.js would try to pre-render pages as static HTML at
@@ -75,9 +76,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const content = await getSiteContent();
+  // Admin-chosen brand colors from /admin/appearance, applied as CSS custom
+  // properties. tailwind.config.ts reads these for its "conservatory" and
+  // "bronze" shades, so this one line repaints the whole site.
+  const themeStyle = buildThemeCssVars(content.appearance?.theme) as React.CSSProperties;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning style={themeStyle}>
       <body className={`${fraunces.variable} ${manrope.variable} ${plexMono.variable} font-body`}>
         <SiteContentProvider value={content}>
           <ThemeProvider>

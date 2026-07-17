@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate, BarChart3, History, Send, CalendarDays, Users } from "lucide-react";
+import { LayoutDashboard, Mail, CalendarCheck, LayoutTemplate, BarChart3, History, Send, CalendarDays, Users, Palette } from "lucide-react";
 import { getSiteContent } from "@/lib/content-store";
 import { getCurrentStaffFromCookies } from "@/lib/current-staff";
 import { AdminLogoutButton } from "@/components/admin/logout-button";
@@ -34,6 +34,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </Link>
             <Link href="/admin/content" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
               <LayoutTemplate className="h-4 w-4" /> Site Content
+            </Link>
+            <Link href="/admin/appearance" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
+              <Palette className="h-4 w-4" /> Appearance
             </Link>
             <Link href="/admin/contacts" className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-stone-900/5 dark:hover:bg-white/5">
               <Mail className="h-4 w-4" /> Contact Messages

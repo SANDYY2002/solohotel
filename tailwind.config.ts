@@ -28,7 +28,13 @@ const config: Config = {
           900: "#1B1815",
           950: "#100E0C",
         },
-        // Brand — "conservatory" deep greens
+        // Brand — "conservatory" deep greens.
+        // 900/950 are wired to CSS custom properties (see globals.css and
+        // src/lib/theme-colors.ts) so an admin-chosen "primary" color in
+        // /admin/appearance repaints every bg-conservatory-900/950 use
+        // across the site. The rest of the ramp stays fixed. The
+        // rgb(... / <alpha-value>) form is required for Tailwind's opacity
+        // modifiers (e.g. bg-conservatory-900/50) to keep working.
         conservatory: {
           50: "#EAF0E7",
           100: "#CBDAC3",
@@ -39,17 +45,19 @@ const config: Config = {
           600: "#264721",
           700: "#1F3A1B",
           800: "#152813",
-          900: "#0F2E1D",
-          950: "#0A1A11",
+          900: "rgb(var(--color-primary-900, 15 46 29) / <alpha-value>)",
+          950: "rgb(var(--color-primary-950, 10 26 17) / <alpha-value>)",
         },
-        // Accent — weathered bronze
+        // Accent — weathered bronze. 300/400/500 (the shades actually used
+        // across the app) are wired to the admin-chosen "accent" color the
+        // same way — see the comment above.
         bronze: {
           50: "#F7EFE1",
           100: "#EEDBB8",
           200: "#DEC08A",
-          300: "#CBA365",
-          400: "#B08D57",
-          500: "#96784A",
+          300: "rgb(var(--color-accent-300, 203 163 101) / <alpha-value>)",
+          400: "rgb(var(--color-accent-400, 176 141 87) / <alpha-value>)",
+          500: "rgb(var(--color-accent-500, 150 120 74) / <alpha-value>)",
           600: "#7A613B",
           700: "#5E4B2E",
           800: "#433522",
