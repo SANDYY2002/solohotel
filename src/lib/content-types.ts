@@ -95,8 +95,32 @@ export type AboutContent = {
   awards: Award[];
 };
 
+// Two base colors the admin picks; every brand shade used across the site
+// (see tailwind.config.ts) is derived from these so the whole palette
+// stays consistent without a picker per shade.
+export type ThemeColors = { primary: string; accent: string };
+
+// Homepage sections an admin can show/hide and reorder. Hero and the
+// location map are structural (booking widget + SEO) and stay fixed.
+export type HomeSectionKey =
+  | "featuredRooms"
+  | "amenities"
+  | "dining"
+  | "spa"
+  | "testimonials"
+  | "gallery"
+  | "faq";
+
+export type HomeSectionToggle = { key: HomeSectionKey; label: string; visible: boolean };
+
+export type AppearanceContent = {
+  theme: ThemeColors;
+  homeSections: HomeSectionToggle[];
+};
+
 export type SiteContent = {
   siteConfig: SiteConfig;
+  appearance: AppearanceContent;
   home: HomeContent;
   rooms: Room[];
   dining: DiningContent;
@@ -109,6 +133,7 @@ export type SiteContent = {
 
 export const CONTENT_SECTIONS = [
   "siteConfig",
+  "appearance",
   "home",
   "rooms",
   "dining",

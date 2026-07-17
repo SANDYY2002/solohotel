@@ -6,6 +6,18 @@
   --font-fraunces: "Fraunces", serif;
   --font-manrope: "Manrope", sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
+
+  /* Brand color defaults, expressed as "r g b" triplets so Tailwind's
+     opacity modifiers (e.g. bg-conservatory-900/50) work. The root layout
+     overrides these inline from the admin-chosen theme in
+     /admin/appearance — see src/lib/theme-colors.ts. These values are the
+     site's original design tokens and are what renders before that inline
+     style is present (e.g. very first paint). */
+  --color-primary-900: 15 46 29; /* #0F2E1D */
+  --color-primary-950: 10 26 17; /* #0A1A11 */
+  --color-accent-300: 203 163 101; /* #CBA365 */
+  --color-accent-400: 176 141 87; /* #B08D57 */
+  --color-accent-500: 150 120 74; /* #96784A */
 }
 
 @layer base {

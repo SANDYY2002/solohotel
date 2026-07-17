@@ -10,6 +10,20 @@ import { FaqSection } from "@/components/home/faq-section";
 import { LocationMap } from "@/components/shared/location-map";
 import { Reveal } from "@/components/shared/reveal";
 import { getSiteContent } from "@/lib/content-store";
+import { DEFAULT_CONTENT } from "@/lib/content-defaults";
+import type { HomeSectionKey } from "@/lib/content-types";
+
+// Maps each toggleable homepage section (see /admin/appearance) to its
+// component. Hero and the location map are structural — they always render.
+const HOME_SECTION_COMPONENTS: Record<HomeSectionKey, React.ComponentType> = {
+  featuredRooms: FeaturedRooms,
+  amenities: Amenities,
+  dining: RestaurantSection,
+  spa: SpaSection,
+  testimonials: TestimonialsSection,
+  gallery: GalleryPreview,
+  faq: FaqSection,
+};
 
 // Reads live content from the database on every request — without this,
 // Next.js would statically prerender this page at build time and never
@@ -21,20 +35,31 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${siteConfig.name} — ${siteConfig.tagline}` };
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { appearance } = await getSiteContent();
+  // Defensive fallback in case a pre-existing site was saved before this
+  // field existed — see content-store.ts's default-merge for the normal path.
+  const homeSections = appearance?.homeSections?.length
+    ? appearance.homeSections
+    : DEFAULT_CONTENT.appearance.homeSections;
+  const visibleSections = homeSections.filter((section) => section.visible);
+
   return (
     <>
       <Hero />
-      {/* Extra top padding compensates for the booking widget overlapping the hero */}
-      <div className="pt-20 md:pt-28">
-        <FeaturedRooms />
-      </div>
-      <Amenities />
-      <RestaurantSection />
-      <SpaSection />
-      <TestimonialsSection />
-      <GalleryPreview />
-      <FaqSection />
+      {visibleSections.map((section, index) => {
+        const SectionComponent = HOME_SECTION_COMPONENTS[section.key];
+        if (!SectionComponent) return null;
+        // Extra top padding on whichever section renders first compensates
+        // for the booking widget overlapping the hero.
+        return index === 0 ? (
+          <div key={section.key} className="pt-20 md:pt-28">
+            <SectionComponent />
+          </div>
+        ) : (
+          <SectionComponent key={section.key} />
+        );
+      })}
       <section className="container-hotel pb-24">
         <Reveal className="mb-10 text-center">
           <p className="eyebrow">Find us</p>

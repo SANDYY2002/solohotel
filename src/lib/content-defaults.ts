@@ -32,6 +32,24 @@ export const DEFAULT_CONTENT: SiteContent = {
     bookingCta: "Check Availability",
   },
 
+  // Matches the current design tokens in tailwind.config.ts — admins start
+  // from exactly what's live today, then adjust from there.
+  appearance: {
+    theme: {
+      primary: "#0F2E1D",
+      accent: "#B08D57",
+    },
+    homeSections: [
+      { key: "featuredRooms", label: "Featured Rooms", visible: true },
+      { key: "amenities", label: "Amenities", visible: true },
+      { key: "dining", label: "Dining Teaser", visible: true },
+      { key: "spa", label: "Spa Teaser", visible: true },
+      { key: "testimonials", label: "Testimonials", visible: true },
+      { key: "gallery", label: "Gallery Preview", visible: true },
+      { key: "faq", label: "FAQ", visible: true },
+    ],
+  },
+
   home: {
     heroImage: "https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?q=80&w=2400&auto=format&fit=crop",
     amenities: [
