@@ -4,12 +4,15 @@ import * as React from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { Room } from "@/lib/content-types";
-import { formatUSD } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
+import { useSiteContent } from "@/lib/site-content-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/shared/reveal";
 
 export function RoomCard({ room, reversed = false }: { room: Room; reversed?: boolean }) {
+  const { appearance } = useSiteContent();
+  const currencyCode = appearance.currency.code;
   const [imgIndex, setImgIndex] = React.useState(0);
 
   return (
@@ -76,7 +79,7 @@ export function RoomCard({ room, reversed = false }: { room: Room; reversed?: bo
 
           <div className="mt-auto flex items-center justify-between pt-6">
             <p>
-              <span className="font-display text-2xl text-bronze-500">{formatUSD(room.pricePerNight)}</span>
+              <span className="font-display text-2xl text-bronze-500">{formatCurrency(room.pricePerNight, currencyCode)}</span>
               <span className="text-sm text-stone-400"> / night</span>
             </p>
             <Button

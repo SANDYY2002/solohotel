@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     specialRequests,
   } = (body ?? {}) as Record<string, unknown>;
 
-  const { rooms, siteConfig } = await getSiteContent();
+  const { rooms, siteConfig, appearance } = await getSiteContent();
   const room = rooms.find((r) => r.slug === roomSlug);
   if (!room) {
     return NextResponse.json({ error: "Unknown room type." }, { status: 400 });
@@ -145,6 +145,18 @@ export async function POST(req: Request) {
     // the /api/payments/*/callback routes). Staff still get visibility
     // into the attempt, in case the guest abandons at the payment step.
     const staffEmailResult = await sendStaffNotification({
+  const [guestEmailResult, staffEmailResult] = await Promise.all([
+    sendReservationConfirmation({
+      guestEmail: reservation.guestEmail,
+      guestName: reservation.guestName,
+      confirmationCode: reservation.confirmationCode,
+      roomName: reservation.roomName,
+      checkIn: reservation.checkIn,
+      checkOut: reservation.checkOut,
+      guests: reservation.guests,
+      totalPriceUsd: reservation.totalPriceUsd,
+      currencyCode: appearance.currency.code,
+      hotelName: siteConfig.name,
       hotelEmail: siteConfig.email,
       subject: `Reservation pending payment — ${reservation.confirmationCode}`,
       text: `${reservation.guestName} (${reservation.guestEmail}) started booking ${reservation.roomName} for ${reservation.checkIn} to ${reservation.checkOut} and is being directed to pay $${dueUsd.toLocaleString()}. Will confirm automatically once payment completes.`,

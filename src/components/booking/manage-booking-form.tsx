@@ -2,8 +2,13 @@
 
 import * as React from "react";
 import { Search, Loader2, XCircle, AlertCircle } from "lucide-react";
+<<<<<<< HEAD
 import { formatUSD } from "@/lib/utils";
 import { PaymentMethodSelector } from "@/components/booking/payment-method-selector";
+=======
+import { formatCurrency } from "@/lib/utils";
+import { useSiteContent } from "@/lib/site-content-context";
+>>>>>>> feature/admin-appearance-v2
 
 type Reservation = {
   id: string;
@@ -22,6 +27,8 @@ type Reservation = {
 };
 
 export function ManageBookingForm() {
+  const { appearance } = useSiteContent();
+  const currencyCode = appearance.currency.code;
   const [confirmationCode, setConfirmationCode] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [reservation, setReservation] = React.useState<Reservation | null>(null);
@@ -118,7 +125,7 @@ export function ManageBookingForm() {
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Total</span>
-              <span className="font-medium">{formatUSD(reservation.totalPriceUsd)}</span>
+              <span className="font-medium">{formatCurrency(reservation.totalPriceUsd, currencyCode)}</span>
             </div>
             {reservation.specialRequests && (
               <div className="pt-2">

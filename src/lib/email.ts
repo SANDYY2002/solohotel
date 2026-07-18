@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { formatCurrency } from "@/lib/utils";
 
 /**
  * Transactional email, gated on RESEND_API_KEY being set — same pattern as
@@ -32,6 +33,7 @@ export async function sendReservationConfirmation(params: {
   checkOut: string;
   guests: number;
   totalPriceUsd: number;
+  currencyCode?: string;
   hotelName: string;
   hotelEmail: string;
   hotelPhone: string;
@@ -58,7 +60,7 @@ export async function sendReservationConfirmation(params: {
             <tr><td style="padding: 6px 0; color: #6b6560;">Check-in</td><td style="padding: 6px 0; text-align: right;">${params.checkIn}</td></tr>
             <tr><td style="padding: 6px 0; color: #6b6560;">Check-out</td><td style="padding: 6px 0; text-align: right;">${params.checkOut}</td></tr>
             <tr><td style="padding: 6px 0; color: #6b6560;">Guests</td><td style="padding: 6px 0; text-align: right;">${params.guests}</td></tr>
-            <tr><td style="padding: 6px 0; color: #6b6560;">Total</td><td style="padding: 6px 0; text-align: right;"><strong>$${params.totalPriceUsd.toLocaleString()}</strong></td></tr>
+            <tr><td style="padding: 6px 0; color: #6b6560;">Total</td><td style="padding: 6px 0; text-align: right;"><strong>${formatCurrency(params.totalPriceUsd, params.currencyCode)}</strong></td></tr>
           </table>
           <p>Questions, need to make a change, or want to cancel? Reply to this email, call ${params.hotelPhone}, or visit the "Manage Your Booking" link on our website with this confirmation code.</p>
           <p style="margin-top: 24px; color: #6b6560; font-size: 13px;">— The ${params.hotelName} team</p>

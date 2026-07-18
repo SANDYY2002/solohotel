@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Reveal } from "@/components/shared/reveal";
 import { Button } from "@/components/ui/button";
 import { getSiteContent } from "@/lib/content-store";
-import { formatUSD } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 // Reads live content from the database on every request — without this,
 // Next.js would statically prerender this page at build time and never
@@ -18,7 +18,8 @@ export const metadata: Metadata = {
 };
 
 export default async function SpaPage() {
-  const { spa, gallery } = await getSiteContent();
+  const { spa, gallery, appearance } = await getSiteContent();
+  const currencyCode = appearance.currency.code;
   const { treatments: spaTreatments, packages: spaPackages, facilities: spaFacilities } = spa;
   const spaImages = gallery.filter((g) => g.category === "Spa");
 
@@ -49,7 +50,7 @@ export default async function SpaPage() {
                 <p className="mt-1 text-xs font-mono uppercase tracking-widest2 text-stone-500">{t.duration}</p>
                 <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-400">{t.description}</p>
               </div>
-              <p className="whitespace-nowrap font-display text-xl text-bronze-500">{formatUSD(t.price)}</p>
+              <p className="whitespace-nowrap font-display text-xl text-bronze-500">{formatCurrency(t.price, currencyCode)}</p>
             </Reveal>
           ))}
         </div>
@@ -70,7 +71,7 @@ export default async function SpaPage() {
                 className="flex flex-col rounded-sm bg-white p-8 shadow-glass dark:bg-conservatory-900"
               >
                 <h3 className="font-display text-2xl">{p.name}</h3>
-                <p className="mt-1 font-display text-3xl text-bronze-500">{formatUSD(p.price)}</p>
+                <p className="mt-1 font-display text-3xl text-bronze-500">{formatCurrency(p.price, currencyCode)}</p>
                 <ul className="mt-6 space-y-2 text-sm text-stone-600 dark:text-stone-300">
                   {p.includes.map((inc) => (
                     <li key={inc} className="flex items-center gap-2">

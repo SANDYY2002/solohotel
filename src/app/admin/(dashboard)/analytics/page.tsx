@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { formatUSD } from "@/lib/utils";
+import { getSiteContent } from "@/lib/content-store";
+import { formatCurrency } from "@/lib/utils";
 import {
   BookingsTrendChart,
   RevenueTrendChart,
@@ -23,6 +24,8 @@ function lastNMonths(n: number): { key: string; label: string }[] {
 }
 
 export default async function AnalyticsPage() {
+  const { appearance } = await getSiteContent();
+  const currencyCode = appearance.currency.code;
   const [reservations, contacts] = await Promise.all([
     prisma.reservation.findMany({ select: { createdAt: true, totalPriceUsd: true, status: true, roomName: true } }),
     prisma.contactSubmission.findMany({ select: { createdAt: true } }),
@@ -77,7 +80,7 @@ export default async function AnalyticsPage() {
 
       <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div className="rounded-sm border border-stone-200 p-5 dark:border-stone-800">
-          <p className="font-display text-3xl">{formatUSD(totalRevenue)}</p>
+          <p className="font-display text-3xl">{formatCurrency(totalRevenue, currencyCode)}</p>
           <p className="mt-1 text-xs uppercase tracking-wide text-stone-500">Total revenue (non-cancelled)</p>
         </div>
         <div className="rounded-sm border border-stone-200 p-5 dark:border-stone-800">
@@ -85,7 +88,7 @@ export default async function AnalyticsPage() {
           <p className="mt-1 text-xs uppercase tracking-wide text-stone-500">Total reservations</p>
         </div>
         <div className="rounded-sm border border-stone-200 p-5 dark:border-stone-800">
-          <p className="font-display text-3xl">{formatUSD(avgBookingValue)}</p>
+          <p className="font-display text-3xl">{formatCurrency(avgBookingValue, currencyCode)}</p>
           <p className="mt-1 text-xs uppercase tracking-wide text-stone-500">Average booking value</p>
         </div>
         <div className="rounded-sm border border-stone-200 p-5 dark:border-stone-800">

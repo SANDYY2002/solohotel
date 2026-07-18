@@ -11,7 +11,8 @@ import { Pagination } from "@/components/admin/pagination";
 import { BulkActionBar } from "@/components/admin/bulk-action-bar";
 import { downloadCsv } from "@/lib/csv-export";
 import { useToast } from "@/components/admin/toast-provider";
-import { formatDate, formatUSD } from "@/lib/utils";
+import { useSiteContent } from "@/lib/site-content-context";
+import { formatDate, formatCurrency } from "@/lib/utils";
 import type { Reservation } from "@prisma/client";
 
 const STATUS_OPTIONS = ["HELD", "CONFIRMED", "CANCELLED"] as const;
@@ -39,6 +40,8 @@ function SortButton({
 export function ReservationsTable({ reservations }: { reservations: Reservation[] }) {
   const router = useRouter();
   const showToast = useToast();
+  const { appearance } = useSiteContent();
+  const currencyCode = appearance.currency.code;
 
   const [statusFilter, setStatusFilter] = React.useState<string>("ALL");
   const [query, setQuery] = React.useState("");
@@ -296,7 +299,7 @@ export function ReservationsTable({ reservations }: { reservations: Reservation[
                   {r.checkIn} → {r.checkOut}
                 </td>
                 <td className="px-4 py-4">{r.guests}</td>
-                <td className="whitespace-nowrap px-4 py-4">{formatUSD(r.totalPriceUsd)}</td>
+                <td className="whitespace-nowrap px-4 py-4">{formatCurrency(r.totalPriceUsd, currencyCode)}</td>
                 <td className="whitespace-nowrap px-4 py-4 text-stone-500">{formatDate(new Date(r.createdAt).toISOString())}</td>
                 <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                   <StatusEditor id={r.id} status={r.status} options={[...STATUS_OPTIONS]} endpoint="/api/admin/reservations" />

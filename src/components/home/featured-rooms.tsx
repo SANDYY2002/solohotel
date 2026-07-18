@@ -2,14 +2,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { getSiteContent } from "@/lib/content-store";
-import { formatUSD } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { Reveal } from "@/components/shared/reveal";
 import { Badge } from "@/components/ui/badge";
 
 const FALLBACK_ROOM_IMAGE = "/images/room-placeholder.jpg";
 
 export async function FeaturedRooms() {
-  const { rooms } = await getSiteContent();
+  const { rooms, appearance } = await getSiteContent();
+  const currencyCode = appearance.currency.code;
   const featured = rooms.slice(0, 3);
 
   return (
@@ -33,7 +34,7 @@ export async function FeaturedRooms() {
             <Link
               href={`/rooms#${room.slug}`}
               className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-bronze-400"
-              aria-label={`View details for ${room.name}, ${formatUSD(room.pricePerNight)} per night`}
+              aria-label={`View details for ${room.name}, ${formatCurrency(room.pricePerNight, currencyCode)} per night`}
             >
               <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
                 <Image
@@ -54,7 +55,7 @@ export async function FeaturedRooms() {
                   <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">{room.view}</p>
                 </div>
                 <p className="whitespace-nowrap text-right font-mono text-sm text-bronze-500">
-                  {formatUSD(room.pricePerNight)}
+                  {formatCurrency(room.pricePerNight, currencyCode)}
                   <span className="text-stone-400">/night</span>
                 </p>
               </div>

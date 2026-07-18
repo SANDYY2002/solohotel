@@ -2,11 +2,13 @@
 
 import * as React from "react";
 import { ArrowUp, ArrowDown, Eye, EyeOff, RotateCcw } from "lucide-react";
-import { Label } from "@/components/ui/input";
+import { Label, Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SaveBar, useSaveSection } from "@/components/admin/save-bar";
 import { cn } from "@/lib/utils";
 import { DEFAULT_CONTENT } from "@/lib/content-defaults";
+import { CURRENCIES } from "@/lib/currencies";
+import { DISPLAY_FONTS, BODY_FONTS, FONT_SCALES, findDisplayFont, findBodyFont, buildGoogleFontsHref } from "@/lib/typography";
 import type { AppearanceContent, HomeSectionToggle } from "@/lib/content-types";
 
 const DEFAULT_THEME = DEFAULT_CONTENT.appearance.theme;
@@ -134,6 +136,20 @@ function SectionToggleList({
 export function AppearanceEditor({ initial }: { initial: AppearanceContent }) {
   const { data, setData, save, state, errorMessage } = useSaveSection("appearance", initial);
 
+  // Loads whichever fonts are currently selected (even before saving) so the
+  // preview card below shows the real typeface, not a fallback.
+  React.useEffect(() => {
+    const href = buildGoogleFontsHref(findDisplayFont(data.typography.displayFontId), findBodyFont(data.typography.bodyFontId));
+    if (!href) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, [data.typography.displayFontId, data.typography.bodyFontId]);
+
   return (
     <div>
       <SaveBar
@@ -196,6 +212,112 @@ export function AppearanceEditor({ initial }: { initial: AppearanceContent }) {
             >
               Accent
             </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-1 font-display text-lg">Currency</h2>
+          <p className="mb-4 text-sm text-stone-500 dark:text-stone-400">
+            Every price on the site — rooms, dining, spa, bookings, receipts, and the admin
+            dashboard — is shown in this currency.
+          </p>
+          <div className="max-w-xs">
+            <Label htmlFor="currency-select">Currency</Label>
+            <Select
+              id="currency-select"
+              value={data.currency.code}
+              onChange={(e) => setData({ ...data, currency: { code: e.target.value } })}
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-display text-lg">Typography</h2>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setData({ ...data, typography: { ...DEFAULT_CONTENT.appearance.typography } })}
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> Reset to default
+            </Button>
+          </div>
+          <p className="mb-4 text-sm text-stone-500 dark:text-stone-400">
+            Heading font, body font, and overall text size across the whole site. Non-default fonts
+            load from Google Fonts.
+          </p>
+          <div className="flex flex-wrap gap-6">
+            <div className="w-56">
+              <Label htmlFor="display-font-select">Heading font</Label>
+              <Select
+                id="display-font-select"
+                value={data.typography.displayFontId}
+                onChange={(e) => setData({ ...data, typography: { ...data.typography, displayFontId: e.target.value } })}
+              >
+                {DISPLAY_FONTS.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="w-56">
+              <Label htmlFor="body-font-select">Body font</Label>
+              <Select
+                id="body-font-select"
+                value={data.typography.bodyFontId}
+                onChange={(e) => setData({ ...data, typography: { ...data.typography, bodyFontId: e.target.value } })}
+              >
+                {BODY_FONTS.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="w-56">
+              <Label htmlFor="font-scale-select">Text size</Label>
+              <Select
+                id="font-scale-select"
+                value={data.typography.fontScaleId}
+                onChange={(e) => setData({ ...data, typography: { ...data.typography, fontScaleId: e.target.value } })}
+              >
+                {FONT_SCALES.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          {/* Live preview — helps confirm a pairing reads well before saving */}
+          <div
+            className="mt-6 rounded-sm border border-stone-200 p-5 dark:border-stone-800"
+            style={
+              {
+                fontFamily: `'${DISPLAY_FONTS.find((f) => f.id === data.typography.displayFontId)?.family}', serif`,
+              } as React.CSSProperties
+            }
+          >
+            <p className="text-2xl">Yukin Cliff House</p>
+            <p
+              className="mt-1 text-sm text-stone-500 dark:text-stone-400"
+              style={
+                {
+                  fontFamily: `'${BODY_FONTS.find((f) => f.id === data.typography.bodyFontId)?.family}', sans-serif`,
+                } as React.CSSProperties
+              }
+            >
+              A five-star cliffside retreat on the Amalfi Coast.
+            </p>
           </div>
         </section>
 
