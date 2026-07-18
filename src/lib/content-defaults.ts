@@ -39,6 +39,14 @@ export const DEFAULT_CONTENT: SiteContent = {
       primary: "#0F2E1D",
       accent: "#B08D57",
     },
+    currency: {
+      code: "USD",
+    },
+    typography: {
+      displayFontId: "fraunces",
+      bodyFontId: "manrope",
+      fontScaleId: "comfortable",
+    },
     homeSections: [
       { key: "featuredRooms", label: "Featured Rooms", visible: true },
       { key: "amenities", label: "Amenities", visible: true },

@@ -113,8 +113,20 @@ export type HomeSectionKey =
 
 export type HomeSectionToggle = { key: HomeSectionKey; label: string; visible: boolean };
 
+// ISO 4217 currency code, picked from the curated list in lib/currencies.ts.
+export type CurrencyContent = { code: string };
+
+// Font + size picks, from the curated lists in lib/typography.ts.
+export type TypographyContent = {
+  displayFontId: string;
+  bodyFontId: string;
+  fontScaleId: string;
+};
+
 export type AppearanceContent = {
   theme: ThemeColors;
+  currency: CurrencyContent;
+  typography: TypographyContent;
   homeSections: HomeSectionToggle[];
 };
 

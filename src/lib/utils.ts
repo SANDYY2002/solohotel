@@ -6,13 +6,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** Format a number as USD currency, e.g. 480 -> "$480". */
-export function formatUSD(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
+/** Format a number as currency, e.g. formatCurrency(480, "EUR") -> "€480". Falls back to USD for an invalid/unknown code rather than throwing. */
+export function formatCurrency(amount: number, currencyCode: string = "USD") {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currencyCode,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
 }
 
 /** Format an ISO date string as "Sat, 12 Jul 2026". */

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     specialRequests,
   } = (body ?? {}) as Record<string, unknown>;
 
-  const { rooms, siteConfig } = await getSiteContent();
+  const { rooms, siteConfig, appearance } = await getSiteContent();
   const room = rooms.find((r) => r.slug === roomSlug);
   if (!room) {
     return NextResponse.json({ error: "Unknown room type." }, { status: 400 });
@@ -104,6 +104,7 @@ export async function POST(req: Request) {
       checkOut: reservation.checkOut,
       guests: reservation.guests,
       totalPriceUsd: reservation.totalPriceUsd,
+      currencyCode: appearance.currency.code,
       hotelName: siteConfig.name,
       hotelEmail: siteConfig.email,
       hotelPhone: siteConfig.phone,

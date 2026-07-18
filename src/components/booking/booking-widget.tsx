@@ -7,7 +7,7 @@ import { CalendarDays, Users, Tag, Search, CheckCircle2, Loader2, User, Mail, Ph
 import { Label, Select, Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSiteContent } from "@/lib/site-content-context";
-import { formatUSD, nightsBetween } from "@/lib/utils";
+import { formatCurrency, nightsBetween } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 type Step = "search" | "results" | "details" | "confirmed";
@@ -19,7 +19,8 @@ function todayISO(offsetDays = 0) {
 }
 
 export function BookingWidget({ compact = false }: { compact?: boolean }) {
-  const { rooms } = useSiteContent();
+  const { rooms, appearance } = useSiteContent();
+  const currencyCode = appearance.currency.code;
   const [step, setStep] = React.useState<Step>("search");
   const [checkIn, setCheckIn] = React.useState(todayISO(14));
   const [checkOut, setCheckOut] = React.useState(todayISO(17));
@@ -201,7 +202,7 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
                         {room.size} · {room.bedType} · {room.available ? `${room.unitsLeft} left` : "Sold out"}
                       </p>
                       <p className="mt-1 text-sm font-medium text-bronze-500">
-                        {formatUSD(total)} <span className="text-stone-400">total</span>
+                        {formatCurrency(total, currencyCode)} <span className="text-stone-400">total</span>
                       </p>
                     </div>
                     <Button
@@ -246,7 +247,7 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
                 {checkIn} → {checkOut} · {nights} night{nights > 1 ? "s" : ""} · {guests} guest{Number(guests) > 1 ? "s" : ""}
               </p>
               <p className="mt-1 font-medium text-bronze-500">
-                {formatUSD(Math.round(selected.pricePerNight * nights * (1 - promoDiscount)))} total
+                {formatCurrency(Math.round(selected.pricePerNight * nights * (1 - promoDiscount)), currencyCode)} total
               </p>
             </div>
 
@@ -298,7 +299,7 @@ export function BookingWidget({ compact = false }: { compact?: boolean }) {
               {selected.name} · {checkIn} → {checkOut} · {guests} guest{Number(guests) > 1 ? "s" : ""}
             </p>
             {confirmedTotal !== null && (
-              <p className="mt-1 text-sm font-medium text-bronze-500">{formatUSD(confirmedTotal)} total</p>
+              <p className="mt-1 text-sm font-medium text-bronze-500">{formatCurrency(confirmedTotal, currencyCode)} total</p>
             )}
             <p className="mt-4 font-mono text-sm text-bronze-500">Confirmation #{confirmation}</p>
             <p className="mt-1 text-xs text-stone-500">

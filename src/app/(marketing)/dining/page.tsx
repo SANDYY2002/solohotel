@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Reveal } from "@/components/shared/reveal";
 import { Button } from "@/components/ui/button";
 import { getSiteContent } from "@/lib/content-store";
-import { formatUSD } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 // Reads live content from the database on every request — without this,
 // Next.js would statically prerender this page at build time and never
@@ -18,7 +18,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DiningPage() {
-  const { dining } = await getSiteContent();
+  const { dining, appearance } = await getSiteContent();
+  const currencyCode = appearance.currency.code;
   const { venues: diningVenues, menu: menuSample, chef } = dining;
   return (
     <>
@@ -71,7 +72,7 @@ export default async function DiningPage() {
             </ul>
             <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-6">
               <span className="text-sm text-stone-400">Per guest, wine pairing available</span>
-              <span className="font-display text-2xl text-bronze-300">{formatUSD(menuSample.price)}</span>
+              <span className="font-display text-2xl text-bronze-300">{formatCurrency(menuSample.price, currencyCode)}</span>
             </div>
           </Reveal>
 

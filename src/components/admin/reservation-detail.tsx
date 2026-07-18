@@ -9,7 +9,8 @@ import { NotesEditor } from "@/components/admin/notes-editor";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { PhoneLink } from "@/components/shared/phone-link";
 import { useToast } from "@/components/admin/toast-provider";
-import { formatDate, formatUSD } from "@/lib/utils";
+import { useSiteContent } from "@/lib/site-content-context";
+import { formatDate, formatCurrency } from "@/lib/utils";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -23,6 +24,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function ReservationDetail({ reservation, onClose }: { reservation: Reservation; onClose: () => void }) {
   const router = useRouter();
   const showToast = useToast();
+  const { appearance } = useSiteContent();
+  const currencyCode = appearance.currency.code;
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -64,7 +67,7 @@ export function ReservationDetail({ reservation, onClose }: { reservation: Reser
           {reservation.guestPhone ? <PhoneLink phone={reservation.guestPhone} showIcon={false} /> : <span className="text-stone-400">—</span>}
         </Field>
         <Field label="Room">{reservation.roomName}</Field>
-        <Field label="Total">{formatUSD(reservation.totalPriceUsd)}</Field>
+        <Field label="Total">{formatCurrency(reservation.totalPriceUsd, currencyCode)}</Field>
         <Field label="Check-in">{reservation.checkIn}</Field>
         <Field label="Check-out">{reservation.checkOut}</Field>
         {reservation.promoCode && <Field label="Promo code">{reservation.promoCode}</Field>}

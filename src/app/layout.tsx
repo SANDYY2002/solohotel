@@ -5,6 +5,7 @@ import { getSiteContent } from "@/lib/content-store";
 import { SiteContentProvider } from "@/lib/site-content-context";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { buildThemeCssVars } from "@/lib/theme-colors";
+import { findDisplayFont, findBodyFont, findFontScale, buildGoogleFontsHref } from "@/lib/typography";
 
 // Every page reads live content from the database via getSiteContent().
 // Without this, Next.js would try to pre-render pages as static HTML at
@@ -76,13 +77,39 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const content = await getSiteContent();
+  const { theme, typography } = content.appearance ?? {};
+
   // Admin-chosen brand colors from /admin/appearance, applied as CSS custom
   // properties. tailwind.config.ts reads these for its "conservatory" and
   // "bronze" shades, so this one line repaints the whole site.
-  const themeStyle = buildThemeCssVars(content.appearance?.theme) as React.CSSProperties;
+  const themeVars = buildThemeCssVars(theme);
+
+  // Admin-chosen fonts + text size. "Default" picks reuse the fonts already
+  // bundled via next/font above (no extra request); anything else is
+  // loaded from Google Fonts and swapped in via the same CSS custom
+  // properties next/font itself defines (--font-fraunces / --font-manrope),
+  // so every font-display/font-body utility class picks it up for free.
+  const displayFont = findDisplayFont(typography?.displayFontId ?? "fraunces");
+  const bodyFont = findBodyFont(typography?.bodyFontId ?? "manrope");
+  const fontScale = findFontScale(typography?.fontScaleId ?? "comfortable");
+  const googleFontsHref = buildGoogleFontsHref(displayFont, bodyFont);
+
+  const htmlStyle: React.CSSProperties = {
+    ...themeVars,
+    fontSize: `${fontScale.percent}%`,
+    ...(displayFont.googleParam ? { "--font-fraunces": `'${displayFont.family}', ${displayFont.fallback}` } : {}),
+    ...(bodyFont.googleParam ? { "--font-manrope": `'${bodyFont.family}', ${bodyFont.fallback}` } : {}),
+  } as React.CSSProperties;
 
   return (
-    <html lang="en" suppressHydrationWarning style={themeStyle}>
+    <html lang="en" suppressHydrationWarning style={htmlStyle}>
+      {googleFontsHref && (
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link rel="stylesheet" href={googleFontsHref} />
+        </head>
+      )}
       <body className={`${fraunces.variable} ${manrope.variable} ${plexMono.variable} font-body`}>
         <SiteContentProvider value={content}>
           <ThemeProvider>
