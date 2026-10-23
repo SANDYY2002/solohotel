@@ -23,7 +23,7 @@ export async function getCurrentStaff(req: Request): Promise<CurrentStaff | null
  */
 export async function getCurrentStaffFromCookies(): Promise<CurrentStaff | null> {
   const { cookies } = await import("next/headers");
-  const token = cookies().get(SESSION_COOKIE)?.value;
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const session = await verifySessionToken(token);
   if (!session) return null;
   return loadStaff(session.staffId);
