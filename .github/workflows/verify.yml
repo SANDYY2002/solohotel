@@ -1,0 +1,25 @@
+name: Verify SoloHotel
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, fix/booking-route-and-hardening]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: mysql://test:test@127.0.0.1:3306/solohotel
+      ADMIN_SESSION_SECRET: ci-only-placeholder-not-for-production
+      ADMIN_PASSWORD: ci-only-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx prisma validate
+      - run: npx prisma generate
+      - run: npx tsc --noEmit
+      - run: npm run build
