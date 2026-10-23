@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Loader2, AlertCircle } from "lucide-react";
-import { formatUSD } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 /**
  * Shown wherever a guest needs to pay for a reservation — right after
@@ -85,7 +85,7 @@ export function PaymentMethodSelector({
   return (
     <div>
       <p className="text-sm text-stone-600 dark:text-stone-400">
-        Amount due: <span className="font-medium text-stone-900 dark:text-stone-100">{formatUSD(amountDueUsd)}</span>
+        Amount due: <span className="font-medium text-stone-900 dark:text-stone-100">{formatCurrency(amountDueUsd, "USD")}</span>
         {amountDueNpr !== undefined && <span className="text-stone-400"> (≈ NPR {amountDueNpr.toLocaleString()})</span>}
       </p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -93,7 +93,7 @@ export function PaymentMethodSelector({
           type="button"
           onClick={payWithEsewa}
           disabled={loading !== null}
-          className="flex h-14 items-center justify-center gap-2 rounded-sm border border-stone-300 bg-white text-sm font-medium text-stone-800 transition-colors hover:border-green-500 disabled:opacity-60 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
+          className="flex h-14 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md text-stone-800 transition-colors hover:border-green-500 disabled:opacity-60 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
         >
           {loading === "esewa" && <Loader2 className="h-4 w-4 animate-spin" />}
           Pay with <span className="font-display text-green-600">eSewa</span>
@@ -102,7 +102,7 @@ export function PaymentMethodSelector({
           type="button"
           onClick={payWithKhalti}
           disabled={loading !== null}
-          className="flex h-14 items-center justify-center gap-2 rounded-sm border border-stone-300 bg-white text-sm font-medium text-stone-800 transition-colors hover:border-purple-500 disabled:opacity-60 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
+          className="flex h-14 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md text-stone-800 transition-colors hover:border-purple-500 disabled:opacity-60 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
         >
           {loading === "khalti" && <Loader2 className="h-4 w-4 animate-spin" />}
           Pay with <span className="font-display text-purple-600">Khalti</span>
