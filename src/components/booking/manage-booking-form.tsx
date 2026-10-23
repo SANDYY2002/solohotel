@@ -2,13 +2,9 @@
 
 import * as React from "react";
 import { Search, Loader2, XCircle, AlertCircle } from "lucide-react";
-<<<<<<< HEAD
-import { formatUSD } from "@/lib/utils";
-import { PaymentMethodSelector } from "@/components/booking/payment-method-selector";
-=======
 import { formatCurrency } from "@/lib/utils";
 import { useSiteContent } from "@/lib/site-content-context";
->>>>>>> feature/admin-appearance-v2
+import { PaymentMethodSelector } from "@/components/booking/payment-method-selector";
 
 type Reservation = {
   id: string;
