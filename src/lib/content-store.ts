@@ -20,6 +20,23 @@ const SINGLETON_KEY = "site-content";
 
 export { DEFAULT_CONTENT };
 
+// Keep older database content branded consistently without changing saved
+// contact addresses, image URLs, or external links.
+function normalizeLegacyBrand<T>(value: T): T {
+  if (typeof value === "string") {
+    if (/^(?:https?:\/\/|mailto:|tel:|\/|data:)/i.test(value) || /\S+@\S+/.test(value)) return value;
+    return value.replace(/\bSolterra\b/gi, "YUKIN") as T;
+  }
+  if (Array.isArray(value)) return value.map(normalizeLegacyBrand) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, normalizeLegacyBrand(entry)])
+    ) as T;
+  }
+  return value;
+}
+
+
 /** Reads the full content object, seeding the row with defaults on first run. */
 export async function getSiteContent(): Promise<SiteContent> {
   const row = await prisma.siteContent.findUnique({ where: { key: SINGLETON_KEY } });
@@ -35,7 +52,7 @@ export async function getSiteContent(): Promise<SiteContent> {
 
   // Merge over defaults so new fields introduced by an app update (e.g. a
   // new section) show up even for content saved by an older version.
-  return { ...DEFAULT_CONTENT, ...(row.data as Partial<SiteContent>) };
+  return normalizeLegacyBrand({ ...DEFAULT_CONTENT, ...(row.data as Partial<SiteContent>) });
 }
 
 /** Replaces a single top-level section (e.g. "rooms", "siteConfig") and persists it. */
@@ -44,7 +61,7 @@ export async function updateSiteContentSection<K extends ContentSection>(
   data: SiteContent[K]
 ): Promise<SiteContent> {
   const current = await getSiteContent();
-  const next: SiteContent = { ...current, [section]: data };
+  const next: SiteContent = normalizeLegacyBrand({ ...current, [section]: data });
 
   await prisma.siteContent.upsert({
     where: { key: SINGLETON_KEY },
@@ -57,10 +74,11 @@ export async function updateSiteContentSection<K extends ContentSection>(
 
 /** Replaces the entire content object at once — used for restoring from a backup file. */
 export async function replaceSiteContent(content: SiteContent): Promise<SiteContent> {
+  const branded = normalizeLegacyBrand(content);
   await prisma.siteContent.upsert({
     where: { key: SINGLETON_KEY },
-    update: { data: content as object },
-    create: { key: SINGLETON_KEY, data: content as object },
+    update: { data: branded as object },
+    create: { key: SINGLETON_KEY, data: branded as object },
   });
-  return content;
+  return branded;
 }

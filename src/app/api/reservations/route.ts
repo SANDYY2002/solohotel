@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     specialRequests,
   } = (body ?? {}) as Record<string, unknown>;
 
-  const { rooms, siteConfig, appearance } = await getSiteContent();
+  const { rooms, siteConfig } = await getSiteContent();
   const room = rooms.find((r) => r.slug === roomSlug);
   if (!room) {
     return NextResponse.json({ error: "Unknown room type." }, { status: 400 });
@@ -38,8 +38,19 @@ export async function POST(req: Request) {
   if (!room.available) {
     return NextResponse.json({ error: "That room is currently sold out." }, { status: 409 });
   }
-  if (typeof checkIn !== "string" || typeof checkOut !== "string" || new Date(checkOut) <= new Date(checkIn)) {
-    return NextResponse.json({ error: "Check-out must be after check-in." }, { status: 400 });
+  // Only accept canonical calendar dates; reject invalid dates and past stays.
+  const validDate = (value: unknown): value is string => {
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const date = new Date(value + "T00:00:00.000Z");
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  };
+  const today = new Date().toISOString().slice(0, 10);
+  if (!validDate(checkIn) || !validDate(checkOut) || checkIn < today || checkOut <= checkIn) {
+    return NextResponse.json({ error: "Choose valid future check-in and check-out dates." }, { status: 400 });
+  }
+  const guestCount = typeof guests === "number" ? guests : Number(guests ?? 1);
+  if (!Number.isSafeInteger(guestCount) || guestCount < 1 || guestCount > room.maxGuests) {
+    return NextResponse.json({ error: `This room supports 1 to ${room.maxGuests} guests.` }, { status: 400 });
   }
 
   // Prevent double-booking: reject if any non-cancelled reservation for this
@@ -87,7 +98,7 @@ export async function POST(req: Request) {
       roomName: room.name,
       checkIn,
       checkOut,
-      guests: typeof guests === "number" ? guests : Number(guests) || 1,
+      guests: guestCount,
       promoCode: typeof promoCode === "string" && promoCode.trim() ? promoCode.trim() : null,
       totalPriceUsd,
       guestName: guestName.trim(),
@@ -145,18 +156,6 @@ export async function POST(req: Request) {
     // the /api/payments/*/callback routes). Staff still get visibility
     // into the attempt, in case the guest abandons at the payment step.
     const staffEmailResult = await sendStaffNotification({
-  const [guestEmailResult, staffEmailResult] = await Promise.all([
-    sendReservationConfirmation({
-      guestEmail: reservation.guestEmail,
-      guestName: reservation.guestName,
-      confirmationCode: reservation.confirmationCode,
-      roomName: reservation.roomName,
-      checkIn: reservation.checkIn,
-      checkOut: reservation.checkOut,
-      guests: reservation.guests,
-      totalPriceUsd: reservation.totalPriceUsd,
-      currencyCode: appearance.currency.code,
-      hotelName: siteConfig.name,
       hotelEmail: siteConfig.email,
       subject: `Reservation pending payment — ${reservation.confirmationCode}`,
       text: `${reservation.guestName} (${reservation.guestEmail}) started booking ${reservation.roomName} for ${reservation.checkIn} to ${reservation.checkOut} and is being directed to pay $${dueUsd.toLocaleString()}. Will confirm automatically once payment completes.`,

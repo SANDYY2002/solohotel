@@ -2,13 +2,9 @@
 
 import * as React from "react";
 import { Search, Loader2, XCircle, AlertCircle } from "lucide-react";
-<<<<<<< HEAD
-import { formatUSD } from "@/lib/utils";
-import { PaymentMethodSelector } from "@/components/booking/payment-method-selector";
-=======
 import { formatCurrency } from "@/lib/utils";
 import { useSiteContent } from "@/lib/site-content-context";
->>>>>>> feature/admin-appearance-v2
+import { PaymentMethodSelector } from "@/components/booking/payment-method-selector";
 
 type Reservation = {
   id: string;
@@ -96,8 +92,8 @@ export function ManageBookingForm() {
 
   if (reservation) {
     return (
-      <div className="mx-auto max-w-md">
-        <div className="rounded-sm border border-stone-200 p-6 dark:border-stone-800">
+      <div className="mx-auto max-w-xl">
+        <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xl shadow-stone-900/5 sm:p-8 dark:border-stone-700/70 dark:bg-conservatory-900/70">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs text-bronze-500">{reservation.confirmationCode}</span>
             <span
@@ -200,8 +196,8 @@ export function ManageBookingForm() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <form onSubmit={handleSearch} className="space-y-4">
+    <div className="mx-auto max-w-xl">
+      <form onSubmit={handleSearch} className="space-y-5 rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xl shadow-stone-900/5 sm:p-8 dark:border-stone-700/70 dark:bg-conservatory-900/70">
         <div>
           <label htmlFor="confirmationCode" className="block text-sm font-medium text-stone-700 dark:text-stone-300">
             Confirmation code
@@ -213,7 +209,7 @@ export function ManageBookingForm() {
             placeholder="YKN-XXXXX"
             value={confirmationCode}
             onChange={(e) => setConfirmationCode(e.target.value)}
-            className="mt-1 h-11 w-full rounded-sm border border-stone-300 bg-white px-3 text-sm uppercase dark:border-stone-700 dark:bg-stone-900"
+            className="mt-2 h-12 w-full rounded-lg border border-stone-300 bg-stone-50 px-4 text-sm uppercase transition-colors focus:border-bronze-400 focus:bg-white dark:border-stone-700 dark:bg-stone-900"
           />
         </div>
         <div>
@@ -227,13 +223,13 @@ export function ManageBookingForm() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 h-11 w-full rounded-sm border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-900"
+            className="mt-2 h-12 w-full rounded-lg border border-stone-300 bg-stone-50 px-4 text-sm transition-colors focus:border-bronze-400 focus:bg-white dark:border-stone-700 dark:bg-stone-900"
           />
         </div>
         <button
           type="submit"
           disabled={status === "searching"}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-sm bg-bronze-400 text-sm font-medium text-ink hover:bg-bronze-300 disabled:opacity-60"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-bronze-400 text-sm font-semibold text-ink shadow-md shadow-bronze-400/20 transition-all hover:-translate-y-0.5 hover:bg-bronze-300 hover:shadow-lg disabled:translate-y-0 disabled:opacity-60"
         >
           {status === "searching" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           {status === "searching" ? "Searching…" : "Find my reservation"}
